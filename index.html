@@ -4,873 +4,172 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Centralización de la educación superior en Chile</title>
-  <style>
-    :root {
-      --bg: #eef3f7;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #667085;
-      --shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
-      --radius: 20px;
-      --accent: #8b2c2c;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      background: radial-gradient(circle at top left, #f8fbff 0%, #eef3f7 52%, #e8eef4 100%);
-      color: var(--text);
-    }
-
-    .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 20px 40px;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      padding: 28px 30px;
-      margin-bottom: 22px;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: 36px;
-      line-height: 1.08;
-    }
-
-    .subtitle {
-      margin: 0;
-      max-width: 940px;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.55;
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 22px;
-      margin-bottom: 22px;
-    }
-
-    .one-col {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 22px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
-    .card h2 {
-      margin: 0 0 6px;
-      font-size: 24px;
-      line-height: 1.15;
-    }
-
-    .desc {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .viz-wrap {
-      border: 1px solid #edf1f5;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
-      padding: 14px;
-      overflow: hidden;
-    }
-
-    svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .mini-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .stat {
-      background: #f8fafc;
-      border: 1px solid #edf1f5;
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 6px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1.05;
-    }
-
-    .annotation {
-      margin-top: 14px;
-      padding: 13px 14px;
-      border-left: 4px solid #d97706;
-      background: #fff8eb;
-      border-radius: 12px;
-      color: #6b4f17;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .legend-title {
-      margin: 14px 0 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .legend-scale {
-      height: 16px;
-      border-radius: 999px;
-      border: 1px solid #d9e1ea;
-      background: linear-gradient(
-        90deg,
-        #e8f5e9 0%,
-        #a5d6a7 20%,
-        #66bb6a 40%,
-        #fbc02d 60%,
-        #ef6c00 80%,
-        #c62828 100%
-      );
-    }
-
-    .legend-labels {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .ranking-title {
-      margin: 18px 0 10px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .list li {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      background: #fafbfc;
-      border: 1px solid #edf1f5;
-      border-radius: 12px;
-      font-size: 14px;
-    }
-
-    .region-name {
-      font-weight: 600;
-    }
-
-    .region-value {
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .footer {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .error {
-      margin-top: 18px;
-      color: #b42318;
-      font-weight: 700;
-    }
-
-    /* ESTILO NUEVO PARA EL HOVER DEL MAPA */
-    .tooltip {
-      position: absolute;
-      background: rgba(31, 41, 55, 0.95);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 1000;
-    }
-
-    .tooltip-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-      font-size: 14px;
-    }
-
-    @media (max-width: 980px) {
-      .two-col {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 30px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
-    <section class="hero">
-      <h1>Centralización de la educación superior en Chile</h1>
-    </section>
-
+    <section class="hero"><h1>Centralización de la educación superior en Chile</h1></section>
     <section class="two-col">
       <article class="card">
-        <h2>Evolución temporal de la concentración de matriculados en la Región Metropolitana</h2>
-
-        <div class="viz-wrap">
-          <svg id="lineChart" viewBox="0 0 760 430" aria-label="Evolución temporal de la concentración"></svg>
-        </div>
-
+        <h2>Evolución temporal de matriculados en la Región Metropolitana</h2>
+        <div class="viz-wrap"><svg id="lineChart" viewBox="0 0 760 430"></svg></div>
         <div class="mini-stats">
-          <div class="stat">
-            <div class="stat-label">2015</div>
-            <div class="stat-value" id="statStart">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">2025</div>
-            <div class="stat-value" id="statEnd">—</div>
-          </div>
+          <div class="stat"><div class="stat-label">2015</div><div class="stat-value" id="statStart">—</div></div>
+          <div class="stat"><div class="stat-label">2025</div><div class="stat-value" id="statEnd">—</div></div>
         </div>
-
         <div class="annotation" id="lineNote"></div>
       </article>
-
       <article class="card">
         <h2>Evolución de las 10 regiones con más matriculados</h2>
-
-        <div class="viz-wrap">
-          <svg id="compareChart" viewBox="0 0 760 430" aria-label="Evolución de las principales regiones"></svg>
-        </div>
-
-        <div class="ranking-title">Las 5 regiones con más número de matriculados en 2025</div>
+        <div class="viz-wrap"><svg id="compareChart" viewBox="0 0 760 430"></svg></div>
+        <div class="ranking-title">Las 10 regiones con mayor tasa en 2025</div>
         <ul class="list" id="rankingList"></ul>
       </article>
     </section>
-
     <section class="one-col">
       <article class="card">
         <h2>Concentración de matriculados en 2025</h2>
-
-        <div class="viz-wrap">
-          <svg id="mapSvg" viewBox="0 0 900 1400" aria-label="Mapa de concentración de matriculados 2025"></svg>
-        </div>
-
+        <div class="viz-wrap"><svg id="mapSvg" viewBox="0 0 900 1400"></svg></div>
         <div class="legend-title">Número de matriculados</div>
         <div class="legend-scale"></div>
-        <div class="legend-labels">
-          <span id="legendMin">0</span>
-          <span id="legendMid">0</span>
-          <span id="legendMax">0</span>
-        </div>
-
-        <div class="footer">
-          Fuente: elaboración propia a partir de datos del Centro de Estudios Mineduc.
-        </div>
-
+        <div class="legend-labels"><span id="legendMin">0</span><span id="legendMid">0</span><span id="legendMax">0</span></div>
+        <div class="footer">Fuente: elaboración propia a partir de datos del Centro de Estudios Mineduc.</div>
         <div class="error" id="errorMsg"></div>
       </article>
     </section>
   </div>
-
   <div id="tooltip" class="tooltip"></div>
 
   <script>
-    async function cargarJSON(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("No se pudo cargar " + url);
-      return await res.json();
-    }
+    // Utilidades Core
+    const get = id => document.getElementById(id);
+    const fetchJSON = async u => (await fetch(u)).json();
+    const fetchCSV = async u => {
+      const [h, ...r] = (await (await fetch(u)).text()).replace(/^\ufeff/, "").trim().split(/\r?\n/);
+      const cols = h.split(",").map(c => c.trim());
+      return r.map(l => Object.fromEntries(l.split(",").map((v, i) => [cols[i], v.trim()])));
+    };
 
-    async function cargarCSV(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("No se pudo cargar " + url);
-      const txt = await res.text();
-      return parseCSV(txt);
-    }
+    const normalizar = s => {
+      const str = String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 
-    function parseCSV(text) {
-      const limpio = text.replace(/^\ufeff/, "").trim();
-      const lines = limpio.split(/\r?\n/);
-      const headers = lines[0].split(",").map(h => h.trim());
+      const map = {"arica":"arica y parinacota","tarapaca":"tarapaca","antofagasta":"antofagasta","atacama":"atacama"
+      ,"coquimbo":"coquimbo","valparaiso":"valparaiso","metropolitana":"metropolitana","santiago":"metropolitana","higgins":"ohiggins",
+      "maule":"maule","nuble":"nuble","bio":"biobio","b":"biobio","araucania":"araucania","rios":"los rios","lagos":"los lagos","aysen":"aysen",
+      "magallanes":"magallanes","antartica":"magallanes"};
 
-      return lines.slice(1).map(line => {
-        const values = line.split(",");
-        const obj = {};
-        headers.forEach((h, i) => {
-          obj[h] = values[i] !== undefined ? values[i].trim() : "";
-        });
-        return obj;
-      });
-    }
+      return map[Object.keys(map).find(k => str.includes(k))] || str.trim();
+    };
 
-function normalizar(str) {
-    const s = String(str || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
-
-    if (s.includes("arica")) return "arica y parinacota";
-    if (s.includes("tarapaca")) return "tarapaca";
-    if (s.includes("antofagasta")) return "antofagasta";
-    if (s.includes("atacama")) return "atacama";
-    if (s.includes("coquimbo")) return "coquimbo";
-    if (s.includes("valparaiso")) return "valparaiso";
-    if (s.includes("metropolitana") || s.includes("santiago")) return "metropolitana";
-    if (s.includes("higgins")) return "ohiggins";
-    if (s.includes("maule")) return "maule";
-    if (s.includes("nuble")) return "nuble";
-    if (s.includes("biobio") || s.includes("bio bio") || s.includes("b")) return "biobio";
-    if (s.includes("araucania")) return "araucania";
-    if (s.includes("rios")) return "los rios";
-    if (s.includes("lagos")) return "los lagos";
-    if (s.includes("aysen")) return "aysen";
-    if (s.includes("magallanes") || s.includes("antartica")) return "magallanes";
-
-    return s.trim();
-  }
-
-    function formatMiles(n) {
-      return Number(n).toLocaleString("es-CL");
-    }
-
-    function formatPct(n) {
-      return `${n.toFixed(1)}%`;
-    }
-
-    function svgEl(tag, attrs = {}, text = null) {
+    const fmtM = n => Number(n).toLocaleString("es-CL"), fmtP = n => `${n.toFixed(1)}%`;
+    const svgEl = (tag, attrs={}, txt="") => {
       const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
       Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
-      if (text !== null) el.textContent = text;
+      if (txt) el.textContent = txt;
       return el;
-    }
+    };
+    const linePath = p => p.map((pt, i) => `${i===0?'M':'L'}${pt.x},${pt.y}`).join(" ");
 
-    function linePath(points) {
-      return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-    }
-
-    function flattenCoords(geometry) {
-      const all = [];
-      function walk(coords) {
-        if (!Array.isArray(coords)) return;
-        if (typeof coords[0] === "number" && typeof coords[1] === "number") {
-          all.push(coords);
-        } else {
-          coords.forEach(walk);
-        }
-      }
-      walk(geometry.coordinates);
-      return all;
-    }
-
-    function projectPoint(lon, lat, bounds, width, height, pad) {
-      const x = ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon || 1)) * (width - pad * 2) + pad;
-      const y = height - (((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat || 1)) * (height - pad * 2) + pad);
-      return [x, y];
-    }
-
-    function geometryToPath(geometry, bounds, width, height, pad) {
-      let path = "";
-
-      function ringToPath(ring) {
-        ring.forEach((pt, i) => {
-          const [x, y] = projectPoint(pt[0], pt[1], bounds, width, height, pad);
-          path += `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)} `;
-        });
-        path += "Z ";
-      }
-
-      if (geometry.type === "Polygon") {
-        geometry.coordinates.forEach(ringToPath);
-      } else if (geometry.type === "MultiPolygon") {
-        geometry.coordinates.forEach(poly => poly.forEach(ringToPath));
-      }
-
-      return path.trim();
-    }
-
-    function colorScale(value, min, max) {
-      if (max === min) return "#fbc02d";
-      const t = (value - min) / (max - min);
-
-      const stops = [
-        { t: 0.00, c: [232, 245, 233] },
-        { t: 0.20, c: [165, 214, 167] },
-        { t: 0.40, c: [102, 187, 106] },
-        { t: 0.60, c: [251, 192, 45] },
-        { t: 0.80, c: [239, 108, 0] },
-        { t: 1.00, c: [198, 40, 40] }
-      ];
-
-      let a = stops[0], b = stops[stops.length - 1];
-      for (let i = 0; i < stops.length - 1; i++) {
-        if (t >= stops[i].t && t <= stops[i + 1].t) {
-          a = stops[i];
-          b = stops[i + 1];
-          break;
-        }
-      }
-
-      const localT = (t - a.t) / (b.t - a.t || 1);
-      const rgb = a.c.map((v, i) => Math.round(v + (b.c[i] - v) * localT));
-      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-    }
-
-    function drawLineChart(svgId, serie) {
-      const svg = document.getElementById(svgId);
-      svg.innerHTML = "";
-
-      const W = 760, H = 430;
-      const m = { top: 26, right: 34, bottom: 52, left: 66 };
-      const iw = W - m.left - m.right;
-      const ih = H - m.top - m.bottom;
-
-      const xs = serie.map(d => d.x);
-      const ys = serie.map(d => d.y);
-
-      const xMin = Math.min(...xs);
-      const xMax = Math.max(...xs);
-      const yMin = Math.floor(Math.min(...ys) - 1);
-      const yMax = Math.ceil(Math.max(...ys) + 1);
-
-      const xScale = x => m.left + ((x - xMin) / (xMax - xMin || 1)) * iw;
-      const yScale = y => m.top + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
-
+    const drawGridAndAxes = (svg, w, h, m, xs, yMin, yMax, yFmt, yLabel) => {
+      const iw = w - m.l - m.r, ih = h - m.t - m.b;
+      const xS = x => m.l + ((x - Math.min(...xs)) / (Math.max(...xs) - Math.min(...xs) || 1)) * iw;
+      const yS = y => m.t + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
       for (let i = 0; i <= 5; i++) {
-        const value = yMin + ((yMax - yMin) * i / 5);
-        const y = yScale(value);
-
-        svg.appendChild(svgEl("line", {
-          x1: m.left, y1: y, x2: m.left + iw, y2: y,
-          stroke: "#dfe6ee", "stroke-width": 1
-        }));
-
-        svg.appendChild(svgEl("text", {
-          x: m.left - 10, y: y + 4,
-          "text-anchor": "end",
-          "font-size": 12, fill: "#667085"
-        }, `${value.toFixed(0)}%`));
+        const val = yMin + ((yMax - yMin) * i / 5), y = yS(val);
+        svg.append(svgEl("line", {x1: m.l, y1: y, x2: m.l+iw, y2: y, stroke: "#dfe6ee"}), svgEl("text", {x: m.l-10, y: y+4, "text-anchor": "end", "font-size": 12, fill: "#667085"}, yFmt(val)));
       }
+      xs.forEach(x => svg.append(svgEl("text", {x: xS(x), y: h-16, "text-anchor": "middle", "font-size": 12, fill: "#667085"}, x)));
+      svg.append(svgEl("line", {x1: m.l, y1: m.t+ih, x2: m.l+iw, y2: m.t+ih, stroke: "#9aa6b2", "stroke-width": 1.2}), svgEl("line", {x1: m.l, y1: m.t, x2: m.l, y2: m.t+ih, stroke: "#9aa6b2", "stroke-width": 1.2}), svgEl("text", {x: 20, y: m.t+ih/2, transform: `rotate(-90 20 ${m.t+ih/2})`, "text-anchor": "middle", "font-size": 12, fill: "#667085"}, yLabel));
+      return { xS, yS };
+    };
 
-      xs.forEach(x => {
-        const xx = xScale(x);
-        svg.appendChild(svgEl("text", {
-          x: xx, y: H - 16,
-          "text-anchor": "middle",
-          "font-size": 12, fill: "#667085"
-        }, x));
-      });
-
-      svg.appendChild(svgEl("line", {
-        x1: m.left, y1: m.top + ih, x2: m.left + iw, y2: m.top + ih,
-        stroke: "#9aa6b2", "stroke-width": 1.2
-      }));
-
-      svg.appendChild(svgEl("line", {
-        x1: m.left, y1: m.top, x2: m.left, y2: m.top + ih,
-        stroke: "#9aa6b2", "stroke-width": 1.2
-      }));
-
-      const area = [
-        { x: xScale(xs[0]), y: yScale(yMin) },
-        ...serie.map(d => ({ x: xScale(d.x), y: yScale(d.y) })),
-        { x: xScale(xs[xs.length - 1]), y: yScale(yMin) }
-      ];
-
-      svg.appendChild(svgEl("path", {
-        d: linePath(area) + " Z",
-        fill: "#f3dede",
-        opacity: 0.9
-      }));
-
-      const pts = serie.map(d => ({ x: xScale(d.x), y: yScale(d.y) }));
-
-      svg.appendChild(svgEl("path", {
-        d: linePath(pts),
-        fill: "none",
-        stroke: "#9f2d2d",
-        "stroke-width": 4,
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round"
-      }));
-
+    const drawLineChart = (id, serie) => {
+      const svg = get(id); svg.innerHTML = "";
+      const {xS, yS} = drawGridAndAxes(svg, 760, 430, {t: 26, r: 34, b: 52, l: 66}, serie.map(d=>d.x), Math.floor(Math.min(...serie.map(d=>d.y))-1), Math.ceil(Math.max(...serie.map(d=>d.y))+1), v=>v.toFixed(0)+"%", "% del total nacional");
+      const pts = serie.map(d => ({x: xS(d.x), y: yS(d.y)}));
+      svg.append(
+        svgEl("path", { d: linePath([{x: pts[0].x, y: yS(Math.floor(Math.min(...serie.map(d=>d.y))-1))}, ...pts, {x: pts[pts.length-1].x, y: yS(Math.floor(Math.min(...serie.map(d=>d.y))-1))}]) + " Z", fill: "#f3dede", opacity: 0.9 }),
+        svgEl("path", { d: linePath(pts), fill: "none", stroke: "#9f2d2d", "stroke-width": 4, "stroke-linecap": "round", "stroke-linejoin": "round" })
+      );
       pts.forEach((p, i) => {
-        svg.appendChild(svgEl("circle", {
-          cx: p.x, cy: p.y, r: 4.5,
-          fill: "#9f2d2d", stroke: "#ffffff", "stroke-width": 2
-        }));
-
-        if (i === pts.length - 1) {
-          svg.appendChild(svgEl("text", {
-            x: p.x + 9, y: p.y + 5,
-            "font-size": 13, "font-weight": 700, fill: "#9f2d2d"
-          }, formatPct(serie[i].y)));
-        }
+        svg.append(svgEl("circle", { cx: p.x, cy: p.y, r: 4.5, fill: "#9f2d2d", stroke: "#fff", "stroke-width": 2 }));
+        if(i === pts.length-1) svg.append(svgEl("text", { x: p.x+9, y: p.y+5, "font-size": 13, "font-weight": 700, fill: "#9f2d2d" }, fmtP(serie[i].y)));
       });
+    };
 
-      svg.appendChild(svgEl("text", {
-        x: 20,
-        y: m.top + ih / 2,
-        transform: `rotate(-90 20 ${m.top + ih / 2})`,
-        "text-anchor": "middle",
-        "font-size": 12,
-        fill: "#667085"
-      }, "% del total nacional"));
-    }
-
-function drawCompareChart(svgId, series) {
-      const svg = document.getElementById(svgId);
-      svg.innerHTML = "";
-
-      const W = 760, H = 430;
-      // Ampliamos el margen derecho para que quepan las leyendas
-      const m = { top: 26, right: 140, bottom: 52, left: 66 };
-      const iw = W - m.left - m.right;
-      const ih = H - m.top - m.bottom;
-
-      const xs = [...new Set(series.flatMap(s => s.data.map(d => d.x)))].sort((a, b) => a - b);
-      const ys = series.flatMap(s => s.data.map(d => d.y));
-
-      const xMin = Math.min(...xs);
-      const xMax = Math.max(...xs);
-      const yMin = 0;
-      // Ajustamos el máximo del eje Y para tasas relativas (saltos más precisos)
-      const yMax = Math.ceil(Math.max(...ys) / 10) * 10;
-
-      const xScale = x => m.left + ((x - xMin) / (xMax - xMin || 1)) * iw;
-      const yScale = y => m.top + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
-
-      for (let i = 0; i <= 5; i++) {
-        const value = yMin + ((yMax - yMin) * i / 5);
-        const y = yScale(value);
-
-        svg.appendChild(svgEl("line", {
-          x1: m.left, y1: y, x2: m.left + iw, y2: y,
-          stroke: "#dfe6ee", "stroke-width": 1
-        }));
-
-        svg.appendChild(svgEl("text", {
-          x: m.left - 10, y: y + 4,
-          "text-anchor": "end",
-          "font-size": 12,
-          fill: "#667085"
-        }, value.toFixed(1))); // Mostramos 1 decimal en vez de formatMiles
-      }
-
-      xs.forEach(x => {
-        const xx = xScale(x);
-        svg.appendChild(svgEl("text", {
-          x: xx, y: H - 16,
-          "text-anchor": "middle",
-          "font-size": 12,
-          fill: "#667085"
-        }, x));
+    const drawCompareChart = (id, series) => {
+      const svg = get(id); svg.innerHTML = "";
+      const xs = [...new Set(series.flatMap(s => s.data.map(d => d.x)))].sort();
+      const {xS, yS} = drawGridAndAxes(svg, 760, 430, {t: 26, r: 140, b: 52, l: 66}, xs, 0, Math.ceil(Math.max(...series.flatMap(s=>s.data.map(d=>d.y)))/10)*10, v=>v.toFixed(1), "Matriculados x 1.000 hab.");
+      series.forEach((s, i) => {
+        const pts = s.data.map(d => ({x: xS(d.x), y: yS(d.y)}));
+        svg.append(svgEl("path", { d: linePath(pts), fill: "none", stroke: s.color, "stroke-width": s.width, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+        pts.forEach(p => svg.append(svgEl("circle", { cx: p.x, cy: p.y, r: s.point, fill: s.color, stroke: "#fff", "stroke-width": 1.4 })));
+        svg.append(svgEl("rect", {x: 640, y: 26+(i*24), width: 12, height: 12, fill: s.color, rx: 2}), svgEl("text", {x: 658, y: 36+(i*24), "font-size": 11, fill: "#1f2937", "font-weight": 600}, s.name.charAt(0).toUpperCase() + s.name.slice(1)));
       });
+    };
 
-      svg.appendChild(svgEl("line", {
-        x1: m.left, y1: m.top + ih, x2: m.left + iw, y2: m.top + ih,
-        stroke: "#9aa6b2", "stroke-width": 1.2
-      }));
-
-      svg.appendChild(svgEl("line", {
-        x1: m.left, y1: m.top, x2: m.left, y2: m.top + ih,
-        stroke: "#9aa6b2", "stroke-width": 1.2
-      }));
-
-      series.forEach((s, sIndex) => {
-        const pts = s.data.map(d => ({ x: xScale(d.x), y: yScale(d.y) }));
-
-        svg.appendChild(svgEl("path", {
-          d: linePath(pts),
-          fill: "none",
-          stroke: s.color,
-          "stroke-width": s.width,
-          "stroke-linecap": "round",
-          "stroke-linejoin": "round"
-        }));
-
-        pts.forEach((p, i) => {
-          svg.appendChild(svgEl("circle", {
-            cx: p.x, cy: p.y, r: s.point,
-            fill: s.color, stroke: "#ffffff", "stroke-width": 1.4
-          }));
-        });
-
-        // NUEVO: CAJAS DE LEYENDA A LA DERECHA
-        const legendX = W - m.right + 20;
-        const legendY = m.top + (sIndex * 24);
-
-        svg.appendChild(svgEl("rect", {
-          x: legendX, y: legendY, width: 12, height: 12, fill: s.color, rx: 2
-        }));
-
-        svg.appendChild(svgEl("text", {
-          x: legendX + 18, y: legendY + 10,
-          "font-size": 11, fill: "#1f2937", "font-weight": 600
-        }, s.name.charAt(0).toUpperCase() + s.name.slice(1))); // Capitalizamos
-      });
-
-      svg.appendChild(svgEl("text", {
-        x: 20,
-        y: m.top + ih / 2,
-        transform: `rotate(-90 20 ${m.top + ih / 2})`,
-        "text-anchor": "middle",
-        "font-size": 12,
-        fill: "#667085"
-      }, "Matriculados x 1.000 hab."));
-    }
-
-    function drawMap(svgId, geo, valuesMap) {
-      const svg = document.getElementById(svgId);
-      svg.innerHTML = "";
-
-      const width = 900;
-      const height = 1400;
-      const pad = 30;
-
-      const entries = geo.features.map(f => {
-        const rawName = f.properties.Region;
-        const key = normalizar(rawName);
-        const value = valuesMap[key] ?? 0;
-        return {
-          geometry: f.geometry,
-          value,
-          name: rawName // NUEVO: Guardar el nombre original para el tooltip
-        };
-      });
-
-      const allPts = geo.features.flatMap(f => flattenCoords(f.geometry));
-
-      const bounds = {
-        minLon: Math.min(...allPts.map(p => p[0])),
-        maxLon: Math.max(...allPts.map(p => p[0])),
-        minLat: Math.min(...allPts.map(p => p[1])),
-        maxLat: Math.max(...allPts.map(p => p[1]))
+    const drawMap = (id, geo, vMap) => {
+      const svg = get(id), w = 900, h = 1400, pad = 30; svg.innerHTML = "";
+      const getPts = c => Array.isArray(c[0]) ? c.flatMap(getPts) : [c];
+      const allPts = geo.features.flatMap(f => getPts(f.geometry.coordinates));
+      const b = { minLon: Math.min(...allPts.map(p=>p[0])), maxLon: Math.max(...allPts.map(p=>p[0])), minLat: Math.min(...allPts.map(p=>p[1])), maxLat: Math.max(...allPts.map(p=>p[1])) };
+      const nonZero = geo.features.map(f => vMap[normalizar(f.properties.Region)]||0).filter(v => v > 0);
+      const min = Math.min(...nonZero), max = Math.max(...nonZero);
+      
+      const cScale = v => {
+        const t = (v-min)/(max-min||1), st = [{t:0,c:[232,245,233]},{t:.2,c:[165,214,167]},{t:.4,c:[102,187,106]},{t:.6,c:[251,192,45]},{t:.8,c:[239,108,0]},{t:1,c:[198,40,40]}];
+        const a = st.slice().reverse().find(s=>t>=s.t)||st[0], b = st.find(s=>t<=s.t)||st[st.length-1];
+        return `rgb(${a.c.map((x,i)=>Math.round(x+(b.c[i]-x)*((t-a.t)/(b.t-a.t||1)))).join(',')})`;
       };
 
-      const nonZero = entries.filter(d => d.value > 0);
-      if (!nonZero.length) throw new Error("No hay valores de matrícula para pintar el mapa.");
+      get("legendMin").textContent = fmtM(min); get("legendMid").textContent = fmtM(Math.round((min+max)/2)); get("legendMax").textContent = fmtM(max);
+      svg.append(svgEl("rect", {x:0, y:0, width:w, height:h, fill:"#fbfdff", rx:18}));
 
-      const min = Math.min(...nonZero.map(d => d.value));
-      const max = Math.max(...nonZero.map(d => d.value));
-      const mid = Math.round((min + max) / 2);
-
-      document.getElementById("legendMin").textContent = formatMiles(min);
-      document.getElementById("legendMid").textContent = formatMiles(mid);
-      document.getElementById("legendMax").textContent = formatMiles(max);
-
-      svg.appendChild(svgEl("rect", {
-        x: 0, y: 0, width, height,
-        fill: "#fbfdff",
-        rx: 18
-      }));
-
-      entries.forEach(region => {
-        const pathData = geometryToPath(region.geometry, bounds, width, height, pad);
-        const fill = region.value > 0 ? colorScale(region.value, min, max) : "#f2f4f7";
-
-        const pathEl = svgEl("path", {
-          d: pathData,
-          fill,
-          stroke: "#ffffff",
-          "stroke-width": 1,
-          "vector-effect": "non-scaling-stroke"
-        });
-
-        // NUEVO: EVENTOS PARA EL HOVER DEL TOOLTIP
-        if (region.value > 0) {
-          pathEl.addEventListener("mouseover", (e) => {
-            const tooltip = document.getElementById("tooltip");
-            tooltip.style.opacity = "1";
-            tooltip.innerHTML = `<div class="tooltip-title">${region.name}</div>${formatMiles(region.value)} matriculados`;
-            pathEl.setAttribute("stroke", "#1f2937");
-            pathEl.setAttribute("stroke-width", "2");
-          });
-          
-          pathEl.addEventListener("mousemove", (e) => {
-            const tooltip = document.getElementById("tooltip");
-            tooltip.style.left = (e.pageX + 15) + "px";
-            tooltip.style.top = (e.pageY + 15) + "px";
-          });
-          
-          pathEl.addEventListener("mouseout", () => {
-            const tooltip = document.getElementById("tooltip");
-            tooltip.style.opacity = "0";
-            pathEl.setAttribute("stroke", "#ffffff");
-            pathEl.setAttribute("stroke-width", "1");
-          });
+      geo.features.forEach(f => {
+        const val = vMap[normalizar(f.properties.Region)] || 0;
+        const d = (f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates)
+          .map(poly => poly.map(ring => ring.map((pt,i) => `${i===0?'M':'L'}${((pt[0]-b.minLon)/(b.maxLon-b.minLon)*w-(pad*2)+pad).toFixed(2)},${(h-((pt[1]-b.minLat)/(b.maxLat-b.minLat)*h-(pad*2)+pad)).toFixed(2)}`).join(" ")+" Z").join(" ")).join(" ");
+        
+        const path = svgEl("path", { d, fill: val > 0 ? cScale(val) : "#f2f4f7", stroke: "#fff", "stroke-width": 1, "vector-effect": "non-scaling-stroke" });
+        if (val > 0) {
+          const tt = get("tooltip");
+          path.onmouseover = () => { tt.style.opacity=1; tt.innerHTML=`<div class="tooltip-title">${f.properties.Region}</div>${fmtM(val)} matriculados`; path.setAttribute("stroke","#1f2937"); path.setAttribute("stroke-width",2); };
+          path.onmousemove = e => { tt.style.left=(e.pageX+15)+"px"; tt.style.top=(e.pageY+15)+"px"; };
+          path.onmouseout = () => { tt.style.opacity=0; path.setAttribute("stroke","#fff"); path.setAttribute("stroke-width",1); };
         }
-
-        svg.appendChild(pathEl);
+        svg.append(path);
       });
-    }
+    };
 
-    async function iniciar() {
+    window.onload = async () => {
       try {
-        const [geo, csv] = await Promise.all([
-          cargarJSON("./regiones.json"),
-          cargarCSV("./resumen_superior.csv")
-        ]);
-
-        const data = csv.map(d => ({
-          AGNO: Number(d.AGNO),
-          NOM_REGION: d.NOM_REGION,
-          TOTAL_MATRICULA: Number(d.TOTAL_MATRICULA)
-        }));
-
-        const anos = [...new Set(data.map(d => d.AGNO))].sort((a, b) => a - b);
-        if (!anos.length) throw new Error("No hay datos para graficar.");
-
-        const totalPorAno = {};
-        const porRegion = {};
-
-        data.forEach(d => {
-          if (!totalPorAno[d.AGNO]) totalPorAno[d.AGNO] = 0;
-          totalPorAno[d.AGNO] += d.TOTAL_MATRICULA;
-
-          if (!porRegion[d.NOM_REGION]) porRegion[d.NOM_REGION] = {};
-          porRegion[d.NOM_REGION][d.AGNO] = d.TOTAL_MATRICULA;
-        });
-
-        const regionRM = Object.keys(porRegion).find(r => normalizar(r).includes("metropolitana"));
-        if (!regionRM) throw new Error("No se encontró la Región Metropolitana.");
-
-        const serieRM = anos.map(a => {
-          const valorRM = porRegion[regionRM][a] || 0;
-          const total = totalPorAno[a] || 0;
-          return {
-            x: a,
-            y: total > 0 ? (valorRM / total) * 100 : 0
-          };
-        });
-
+        const [geo, csv] = await Promise.all([fetchJSON("./regiones.json"), fetchCSV("./resumen_superior.csv")]);
+        const data = csv.map(d => ({ AGNO: +d.AGNO, NOM_REGION: d.NOM_REGION, TOTAL: +d.TOTAL_MATRICULA }));
+        const anos = [...new Set(data.map(d => d.AGNO))].sort((a,b)=>a-b);
+        const tAno = {}, pReg = {};
+        
+        data.forEach(d => { tAno[d.AGNO] = (tAno[d.AGNO]||0) + d.TOTAL; pReg[d.NOM_REGION] = pReg[d.NOM_REGION] || {}; pReg[d.NOM_REGION][d.AGNO] = d.TOTAL; });
+        const regRM = Object.keys(pReg).find(r => normalizar(r).includes("metropolitana"));
+        const serieRM = anos.map(a => ({ x: a, y: ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100 }));
         drawLineChart("lineChart", serieRM);
+        
+        get("statStart").textContent = fmtP(serieRM[0].y); get("statEnd").textContent = fmtP(serieRM[serieRM.length-1].y);
+        get("lineNote").innerHTML = `La RM pasa de <b>${fmtP(serieRM[0].y)}</b> del total en el primer año a <b>${fmtP(serieRM[serieRM.length-1].y)}</b> en el último.`;
 
-        const inicio = serieRM[0].y;
-        const fin = serieRM[serieRM.length - 1].y;
+        const pob = {"arica y parinacota":261000,"tarapaca":410000,"antofagasta":714000,"atacama":320000,"coquimbo":870000,"valparaiso":2020000,"metropolitana":8420000,"ohiggins":1020000,"maule":1170000,"nuble":520000,"biobio":1690000,"araucania":1030000,"los rios":411000,"los lagos":907000,"aysen":108000,"magallanes":182000};
+        const paleta = ["#9f2d2d","#2f6ea5","#2e8b57","#9467bd","#d97706","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"];
+        
+        const top10 = Object.keys(pReg).map(r => ({ reg: r, t: ((pReg[r][anos[anos.length-1]]||0) / (pob[normalizar(r)]||1)) * 1000 }))
+          .sort((a,b) => b.t - a.t).slice(0, 10);
 
-        document.getElementById("statStart").textContent = formatPct(inicio);
-        document.getElementById("statEnd").textContent = formatPct(fin);
-        document.getElementById("lineNote").innerHTML =
-          `La Región Metropolitana pasa de representar aproximadamente <b>${formatPct(inicio)}</b> del total nacional en el primer año a <b>${formatPct(fin)}</b> en el último.`;
+        drawCompareChart("compareChart", top10.map((d, i) => ({ name: d.reg, color: paleta[i], width: normalizar(d.reg).includes("metropolitana")?3.5:2, point: normalizar(d.reg).includes("metropolitana")?3.5:2.5, data: anos.map(a => ({ x: a, y: ((pReg[d.reg][a]||0) / (pob[normalizar(d.reg)]||1)) * 1000 })) })));
 
-const ultimoAno = anos[anos.length - 1];
+        get("rankingList").innerHTML = top10.map(d => `<li><span class="region-name">${d.reg}</span><span class="region-value">${d.t.toFixed(1)} x 1.000 hab.</span></li>`).join("");
+        drawMap("mapSvg", geo, Object.fromEntries(data.filter(d=>d.AGNO===2025).map(d => [normalizar(d.NOM_REGION), d.TOTAL])));
 
-        // Población estimada para el cálculo
-        const poblacion2025 = {
-          "arica y parinacota": 261000, "tarapaca": 410000, "antofagasta": 714000,
-          "atacama": 320000, "coquimbo": 870000, "valparaiso": 2020000,
-          "metropolitana": 8420000, "ohiggins": 1020000, "maule": 1170000,
-          "nuble": 520000, "biobio": 1690000, "araucania": 1030000,
-          "los rios": 411000, "los lagos": 907000, "aysen": 108000,
-          "magallanes": 182000
-        };
-
-        // Calculamos el top 5 pero de forma RELATIVA (tasa x 1000 habitantes)
-// Calculamos el top 10 de forma RELATIVA (tasa x 1000 habitantes)
-        const top10Regions = Object.keys(porRegion)
-          .map(region => {
-            const pob = poblacion2025[normalizar(region)] || 1; 
-            const matriculaAbsoluta = porRegion[region][ultimoAno] || 0;
-            return {
-              region,
-              ultimoAbsoluto: matriculaAbsoluta,
-              ultimoRelativo: (matriculaAbsoluta / pob) * 1000
-            };
-          })
-          .sort((a, b) => b.ultimoRelativo - a.ultimoRelativo) 
-          .slice(0, 10); // <-- Cambiamos a 10
-
-        // Paleta extendida a 10 colores diferenciables
-        const palette = [
-          "#9f2d2d", "#2f6ea5", "#2e8b57", "#9467bd", "#d97706",
-          "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-        ];
-
-        const top10Series = top10Regions.map((d, i) => ({
-          name: d.region,
-          color: palette[i],
-          width: normalizar(d.region).includes("metropolitana") ? 3.5 : 2, // Líneas un poco más finas para no saturar
-          point: normalizar(d.region).includes("metropolitana") ? 3.5 : 2.5,
-          data: anos.map(a => {
-            const pob = poblacion2025[normalizar(d.region)] || 1;
-            return {
-              x: a,
-              y: ((porRegion[d.region][a] || 0) / pob) * 1000 
-            };
-          })
-        }));
-
-        drawCompareChart("compareChart", top10Series);
-
-        // Actualizamos el título de la lista automáticamente
-        document.querySelector(".ranking-title").textContent = "Las 10 regiones con mayor tasa de matriculados en 2025";
-
-        const rankingList = document.getElementById("rankingList");
-        rankingList.innerHTML = "";
-        top10Regions.forEach(d => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <span class="region-name">${d.region}</span>
-            <span class="region-value">${d.ultimoRelativo.toFixed(1)} x 1.000 hab.</span>
-          `;
-          rankingList.appendChild(li);
-        });
-
-        const data2025 = data.filter(d => d.AGNO === 2025);
-        if (!data2025.length) throw new Error("No encontré registros para 2025 en resumen_superior.csv");
-
-        const valuesMap = {};
-        data2025.forEach(d => {
-          valuesMap[normalizar(d.NOM_REGION)] = d.TOTAL_MATRICULA;
-        });
-
-        drawMap("mapSvg", geo, valuesMap);
-
-      } catch (e) {
-        console.error(e);
-        document.getElementById("errorMsg").textContent = "Error: " + e.message;
-      }
-    }
-
-    window.onload = iniciar;
+      } catch (e) { get("errorMsg").textContent = "Error: " + e.message; }
+    };
   </script>
 </body>
 </html>
