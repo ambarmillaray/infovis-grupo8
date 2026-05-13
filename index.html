@@ -4,46 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Centralización de la educación superior en Chile</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Toone.min.js"></script>
 </head>
 <body>
   <div class="wrap">
-    <section class="hero"><h1>Centralización de la educación superior en Chile</h1></section>
+    <section class="hero">
+      <h1>Centralización de la educación superior en Chile</h1>
+      <div class="subtitle">
+        <p>Históricamente, el fenómeno de la centralización en Chile ha limitado el desarrollo de la innovación y la economía en el resto de regiones, concentrando la toma de decisiones, recursos financieros y la oferta académica en la Región Metropolitana por sobre el resto de regiones. Esta desigualdad no solo responde a una mayor densidad poblacional en la capital, sino que a una oferta institucional centralizada, provocando que muchos estudiantes migren a Santiago en busca de mejores oportunidades educativas. Simultáneamente, las instituciones regionales enfrentan dificultades operativas y de consolidación debido a un modelo que no suele ajustarse a las necesidades locales.</p>
+      </div>
+    </section>
+    
     <section class="two-col">
       <article class="card">
-        <h2>Evolución temporal de matriculados en la Región Metropolitana</h2>
-        <div class="viz-wrap"><svg id="lineChart" viewBox="0 0 760 430"></svg></div>
-        <div class="mini-stats">
-          <div class="stat"><div class="stat-label">2015</div><div class="stat-value" id="statStart">—</div></div>
-          <div class="stat"><div class="stat-label">2025</div><div class="stat-value" id="statEnd">—</div></div>
-        </div>
+        <h2>Participación de la Región Metropolitana (2015-2025)</h2>
+        <p class="desc">Porcentaje de la matrícula total nacional concentrada en la capital.</p>
+        <div class="viz-wrap"><div id="lineChart"></div></div>
         <div class="annotation" id="lineNote"></div>
       </article>
+
       <article class="card">
-        <h2>Evolución de las 10 regiones con más matriculados</h2>
-        <div class="viz-wrap"><svg id="compareChart" viewBox="0 0 760 430"></svg></div>
-        <div class="ranking-title">Las 10 regiones con mayor tasa en 2025</div>
-        <ul class="list" id="rankingList"></ul>
+        <h2>Cambio territorial: Matrícula x 1.000 hab.</h2>
+        <p class="desc">Evolución de las tasas relativas entre el primer y último año (Slope Chart).</p>
+        <div class="viz-wrap"><div id="slopeChart"></div></div>
       </article>
     </section>
+
     <section class="one-col">
       <article class="card">
-        <h2>Concentración de matriculados en 2025</h2>
-        <div class="viz-wrap"><svg id="mapSvg" viewBox="0 0 900 1400"></svg></div>
-        <div class="legend-title">Número de matriculados</div>
-        <div class="legend-scale"></div>
-        <div class="legend-labels"><span id="legendMin">0</span><span id="legendMid">0</span><span id="legendMax">0</span></div>
-        <div class="footer">Fuente: elaboración propia a partir de datos del Centro de Estudios Mineduc.</div>
+        <h2>Volumen de matrícula por región (2025)</h2>
+        <p class="desc">Distribución absoluta que demuestra la brecha abismal entre la RM y el resto del país.</p>
+        <div class="viz-wrap"><div id="barChart" style="height: 450px;"></div></div>
+        
+        <div class="footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf1f5;">
+          <strong>Origen y procesamiento de datos:</strong><br>
+          Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula total. Finalmente, se generó un archivo resumen consolidado que fue usado como base para la visualización.
+        </div>
         <div class="error" id="errorMsg"></div>
       </article>
     </section>
   </div>
-  <div id="tooltip" class="tooltip"></div>
 
   <script>
-    // Utilidades Core
     const get = id => document.getElementById(id);
-    const fetchJSON = async u => (await fetch(u)).json();
     const fetchCSV = async u => {
       const [h, ...r] = (await (await fetch(u)).text()).replace(/^\ufeff/, "").trim().split(/\r?\n/);
       const cols = h.split(",").map(c => c.trim());
@@ -52,123 +57,70 @@
 
     const normalizar = s => {
       const str = String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-
-      const map = {"arica":"arica y parinacota","tarapaca":"tarapaca","antofagasta":"antofagasta","atacama":"atacama"
-      ,"coquimbo":"coquimbo","valparaiso":"valparaiso","metropolitana":"metropolitana","santiago":"metropolitana","higgins":"ohiggins",
-      "maule":"maule","nuble":"nuble","bio":"biobio","b":"biobio","araucania":"araucania","rios":"los rios","lagos":"los lagos","aysen":"aysen",
-      "magallanes":"magallanes","antartica":"magallanes"};
-
+      const map = {"arica":"arica y parinacota","tarapaca":"tarapaca","antofagasta":"antofagasta","atacama":"atacama","coquimbo":"coquimbo","valparaiso":"valparaiso","metropolitana":"metropolitana","santiago":"metropolitana","higgins":"ohiggins","maule":"maule","nuble":"nuble","bio":"biobio","b":"biobio","araucania":"araucania","rios":"los rios","lagos":"los lagos","aysen":"aysen","magallanes":"magallanes","antartica":"magallanes"};
       return map[Object.keys(map).find(k => str.includes(k))] || str.trim();
-    };
-
-    const fmtM = n => Number(n).toLocaleString("es-CL"), fmtP = n => `${n.toFixed(1)}%`;
-    const svgEl = (tag, attrs={}, txt="") => {
-      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-      Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
-      if (txt) el.textContent = txt;
-      return el;
-    };
-    const linePath = p => p.map((pt, i) => `${i===0?'M':'L'}${pt.x},${pt.y}`).join(" ");
-
-    const drawGridAndAxes = (svg, w, h, m, xs, yMin, yMax, yFmt, yLabel) => {
-      const iw = w - m.l - m.r, ih = h - m.t - m.b;
-      const xS = x => m.l + ((x - Math.min(...xs)) / (Math.max(...xs) - Math.min(...xs) || 1)) * iw;
-      const yS = y => m.t + ih - ((y - yMin) / (yMax - yMin || 1)) * ih;
-      for (let i = 0; i <= 5; i++) {
-        const val = yMin + ((yMax - yMin) * i / 5), y = yS(val);
-        svg.append(svgEl("line", {x1: m.l, y1: y, x2: m.l+iw, y2: y, stroke: "#dfe6ee"}), svgEl("text", {x: m.l-10, y: y+4, "text-anchor": "end", "font-size": 12, fill: "#667085"}, yFmt(val)));
-      }
-      xs.forEach(x => svg.append(svgEl("text", {x: xS(x), y: h-16, "text-anchor": "middle", "font-size": 12, fill: "#667085"}, x)));
-      svg.append(svgEl("line", {x1: m.l, y1: m.t+ih, x2: m.l+iw, y2: m.t+ih, stroke: "#9aa6b2", "stroke-width": 1.2}), svgEl("line", {x1: m.l, y1: m.t, x2: m.l, y2: m.t+ih, stroke: "#9aa6b2", "stroke-width": 1.2}), svgEl("text", {x: 20, y: m.t+ih/2, transform: `rotate(-90 20 ${m.t+ih/2})`, "text-anchor": "middle", "font-size": 12, fill: "#667085"}, yLabel));
-      return { xS, yS };
-    };
-
-    const drawLineChart = (id, serie) => {
-      const svg = get(id); svg.innerHTML = "";
-      const {xS, yS} = drawGridAndAxes(svg, 760, 430, {t: 26, r: 34, b: 52, l: 66}, serie.map(d=>d.x), Math.floor(Math.min(...serie.map(d=>d.y))-1), Math.ceil(Math.max(...serie.map(d=>d.y))+1), v=>v.toFixed(0)+"%", "% del total nacional");
-      const pts = serie.map(d => ({x: xS(d.x), y: yS(d.y)}));
-      svg.append(
-        svgEl("path", { d: linePath([{x: pts[0].x, y: yS(Math.floor(Math.min(...serie.map(d=>d.y))-1))}, ...pts, {x: pts[pts.length-1].x, y: yS(Math.floor(Math.min(...serie.map(d=>d.y))-1))}]) + " Z", fill: "#f3dede", opacity: 0.9 }),
-        svgEl("path", { d: linePath(pts), fill: "none", stroke: "#9f2d2d", "stroke-width": 4, "stroke-linecap": "round", "stroke-linejoin": "round" })
-      );
-      pts.forEach((p, i) => {
-        svg.append(svgEl("circle", { cx: p.x, cy: p.y, r: 4.5, fill: "#9f2d2d", stroke: "#fff", "stroke-width": 2 }));
-        if(i === pts.length-1) svg.append(svgEl("text", { x: p.x+9, y: p.y+5, "font-size": 13, "font-weight": 700, fill: "#9f2d2d" }, fmtP(serie[i].y)));
-      });
-    };
-
-    const drawCompareChart = (id, series) => {
-      const svg = get(id); svg.innerHTML = "";
-      const xs = [...new Set(series.flatMap(s => s.data.map(d => d.x)))].sort();
-      const {xS, yS} = drawGridAndAxes(svg, 760, 430, {t: 26, r: 140, b: 52, l: 66}, xs, 0, Math.ceil(Math.max(...series.flatMap(s=>s.data.map(d=>d.y)))/10)*10, v=>v.toFixed(1), "Matriculados x 1.000 hab.");
-      series.forEach((s, i) => {
-        const pts = s.data.map(d => ({x: xS(d.x), y: yS(d.y)}));
-        svg.append(svgEl("path", { d: linePath(pts), fill: "none", stroke: s.color, "stroke-width": s.width, "stroke-linecap": "round", "stroke-linejoin": "round" }));
-        pts.forEach(p => svg.append(svgEl("circle", { cx: p.x, cy: p.y, r: s.point, fill: s.color, stroke: "#fff", "stroke-width": 1.4 })));
-        svg.append(svgEl("rect", {x: 640, y: 26+(i*24), width: 12, height: 12, fill: s.color, rx: 2}), svgEl("text", {x: 658, y: 36+(i*24), "font-size": 11, fill: "#1f2937", "font-weight": 600}, s.name.charAt(0).toUpperCase() + s.name.slice(1)));
-      });
-    };
-
-    const drawMap = (id, geo, vMap) => {
-      const svg = get(id), w = 900, h = 1400, pad = 30; svg.innerHTML = "";
-      const getPts = c => Array.isArray(c[0]) ? c.flatMap(getPts) : [c];
-      const allPts = geo.features.flatMap(f => getPts(f.geometry.coordinates));
-      const b = { minLon: Math.min(...allPts.map(p=>p[0])), maxLon: Math.max(...allPts.map(p=>p[0])), minLat: Math.min(...allPts.map(p=>p[1])), maxLat: Math.max(...allPts.map(p=>p[1])) };
-      const nonZero = geo.features.map(f => vMap[normalizar(f.properties.Region)]||0).filter(v => v > 0);
-      const min = Math.min(...nonZero), max = Math.max(...nonZero);
-      
-      const cScale = v => {
-        const t = (v-min)/(max-min||1), st = [{t:0,c:[232,245,233]},{t:.2,c:[165,214,167]},{t:.4,c:[102,187,106]},{t:.6,c:[251,192,45]},{t:.8,c:[239,108,0]},{t:1,c:[198,40,40]}];
-        const a = st.slice().reverse().find(s=>t>=s.t)||st[0], b = st.find(s=>t<=s.t)||st[st.length-1];
-        return `rgb(${a.c.map((x,i)=>Math.round(x+(b.c[i]-x)*((t-a.t)/(b.t-a.t||1)))).join(',')})`;
-      };
-
-      get("legendMin").textContent = fmtM(min); get("legendMid").textContent = fmtM(Math.round((min+max)/2)); get("legendMax").textContent = fmtM(max);
-      svg.append(svgEl("rect", {x:0, y:0, width:w, height:h, fill:"#fbfdff", rx:18}));
-
-      geo.features.forEach(f => {
-        const val = vMap[normalizar(f.properties.Region)] || 0;
-        const d = (f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates)
-          .map(poly => poly.map(ring => ring.map((pt,i) => `${i===0?'M':'L'}${((pt[0]-b.minLon)/(b.maxLon-b.minLon)*w-(pad*2)+pad).toFixed(2)},${(h-((pt[1]-b.minLat)/(b.maxLat-b.minLat)*h-(pad*2)+pad)).toFixed(2)}`).join(" ")+" Z").join(" ")).join(" ");
-        
-        const path = svgEl("path", { d, fill: val > 0 ? cScale(val) : "#f2f4f7", stroke: "#fff", "stroke-width": 1, "vector-effect": "non-scaling-stroke" });
-        if (val > 0) {
-          const tt = get("tooltip");
-          path.onmouseover = () => { tt.style.opacity=1; tt.innerHTML=`<div class="tooltip-title">${f.properties.Region}</div>${fmtM(val)} matriculados`; path.setAttribute("stroke","#1f2937"); path.setAttribute("stroke-width",2); };
-          path.onmousemove = e => { tt.style.left=(e.pageX+15)+"px"; tt.style.top=(e.pageY+15)+"px"; };
-          path.onmouseout = () => { tt.style.opacity=0; path.setAttribute("stroke","#fff"); path.setAttribute("stroke-width",1); };
-        }
-        svg.append(path);
-      });
     };
 
     window.onload = async () => {
       try {
-        const [geo, csv] = await Promise.all([fetchJSON("./regiones.json"), fetchCSV("./resumen_superior.csv")]);
+        const csv = await fetchCSV("./resumen_superior.csv");
         const data = csv.map(d => ({ AGNO: +d.AGNO, NOM_REGION: d.NOM_REGION, TOTAL: +d.TOTAL_MATRICULA }));
         const anos = [...new Set(data.map(d => d.AGNO))].sort((a,b)=>a-b);
+        const yStart = anos[0], yEnd = anos[anos.length-1];
         const tAno = {}, pReg = {};
         
         data.forEach(d => { tAno[d.AGNO] = (tAno[d.AGNO]||0) + d.TOTAL; pReg[d.NOM_REGION] = pReg[d.NOM_REGION] || {}; pReg[d.NOM_REGION][d.AGNO] = d.TOTAL; });
         const regRM = Object.keys(pReg).find(r => normalizar(r).includes("metropolitana"));
-        const serieRM = anos.map(a => ({ x: a, y: ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100 }));
-        drawLineChart("lineChart", serieRM);
-        
-        get("statStart").textContent = fmtP(serieRM[0].y); get("statEnd").textContent = fmtP(serieRM[serieRM.length-1].y);
-        get("lineNote").innerHTML = `La RM pasa de <b>${fmtP(serieRM[0].y)}</b> del total en el primer año a <b>${fmtP(serieRM[serieRM.length-1].y)}</b> en el último.`;
+
+        // Gráfico de línea (Participación RM)
+        const serieRM = anos.map(a => ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100);
+        Plotly.newPlot('lineChart', [{ 
+          x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#9f2d2d', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>' 
+        }], { margin: {t: 20, r: 20, b: 30, l: 40}, yaxis: {ticksuffix: '%'} }, {displayModeBar: false});
+        get("lineNote").innerHTML = `La RM concentra <b>más del ${Math.floor(serieRM[serieRM.length-1])}%</b> del país, estancando la descentralización educativa.`;
 
         const pob = {"arica y parinacota":261000,"tarapaca":410000,"antofagasta":714000,"atacama":320000,"coquimbo":870000,"valparaiso":2020000,"metropolitana":8420000,"ohiggins":1020000,"maule":1170000,"nuble":520000,"biobio":1690000,"araucania":1030000,"los rios":411000,"los lagos":907000,"aysen":108000,"magallanes":182000};
-        const paleta = ["#9f2d2d","#2f6ea5","#2e8b57","#9467bd","#d97706","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"];
         
-        const top10 = Object.keys(pReg).map(r => ({ reg: r, t: ((pReg[r][anos[anos.length-1]]||0) / (pob[normalizar(r)]||1)) * 1000 }))
-          .sort((a,b) => b.t - a.t).slice(0, 10);
+        // Slope chart top 5 regiones
+        const top5 = Object.keys(pReg)
+          .map(r => ({ reg: r, v15: ((pReg[r][yStart]||0)/pob[normalizar(r)])*1000, v25: ((pReg[r][yEnd]||0)/pob[normalizar(r)])*1000 }))
+          .sort((a,b) => b.v25 - a.v25).slice(0, 5);
 
-        drawCompareChart("compareChart", top10.map((d, i) => ({ name: d.reg, color: paleta[i], width: normalizar(d.reg).includes("metropolitana")?3.5:2, point: normalizar(d.reg).includes("metropolitana")?3.5:2.5, data: anos.map(a => ({ x: a, y: ((pReg[d.reg][a]||0) / (pob[normalizar(d.reg)]||1)) * 1000 })) })));
+        const slopeTraces = top5.map((d, i) => ({
+          name: d.reg,
+          x: [yStart.toString(), yEnd.toString()],
+          y: [d.v15, d.v25],
+          type: 'scatter', mode: 'lines+markers+text',
+          text: [` ${d.v15.toFixed(0)}`, ` ${d.v25.toFixed(0)}`], textposition: ['middle left', 'middle right'],
+          line: {color: normalizar(d.reg).includes("metropolitana") ? '#9f2d2d' : '#9ca3af', width: normalizar(d.reg).includes("metropolitana") ? 3 : 1.5},
+          marker: {size: 8}
+        }));
 
-        get("rankingList").innerHTML = top10.map(d => `<li><span class="region-name">${d.reg}</span><span class="region-value">${d.t.toFixed(1)} x 1.000 hab.</span></li>`).join("");
-        drawMap("mapSvg", geo, Object.fromEntries(data.filter(d=>d.AGNO===2025).map(d => [normalizar(d.NOM_REGION), d.TOTAL])));
+        Plotly.newPlot('slopeChart', slopeTraces, {
+          margin: {t: 20, r: 60, b: 30, l: 60}, showlegend: true, legend: {orientation: 'h', y: -0.2}, 
+          xaxis: {type: 'category'}, hovermode: 'closest'
+        }, {displayModeBar: false});
 
-      } catch (e) { get("errorMsg").textContent = "Error: " + e.message; }
+        // Gráfico de barras ordenado
+        const dEnd = data.filter(d=>d.AGNO===yEnd).sort((a,b) => a.TOTAL - b.TOTAL);
+        
+        Plotly.newPlot('barChart', [{
+          type: 'bar',
+          x: dEnd.map(d => d.TOTAL),
+          y: dEnd.map(d => d.NOM_REGION),
+          orientation: 'h',
+          marker: {
+            color: dEnd.map(d => normalizar(d.NOM_REGION).includes("metropolitana") ? '#9f2d2d' : '#60a5fa')
+          },
+          text: dEnd.map(d => d.TOTAL.toLocaleString('es-CL')),
+          textposition: 'outside',
+          hovertemplate: '%{x:,.0f} alumnos<extra></extra>'
+        }], {
+          margin: {t: 10, r: 60, b: 40, l: 150},
+          xaxis: {title: 'Total Matriculados'},
+        }, {displayModeBar: false});
+
+      } catch (e) { get("errorMsg").textContent = "Error al cargar: " + e.message; }
     };
   </script>
 </body>
