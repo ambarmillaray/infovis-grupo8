@@ -6,7 +6,7 @@
   <title>Centralización de la educación superior en Chile</title>
   <link rel="stylesheet" href="style.css"/>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Toone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.min.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -27,7 +27,7 @@
 
       <article class="card">
         <h2>Cambio territorial: Matrícula x 1.000 hab.</h2>
-        <p class="desc">Evolución de las tasas relativas entre el primer y último año (Slope Chart).</p>
+        <p class="desc">Evolución de las tasas relativas entre el primer y último año.</p>
         <div class="viz-wrap"><div id="slopeChart"></div></div>
       </article>
     </section>
@@ -75,7 +75,7 @@
         // Gráfico de línea (Participación RM)
         const serieRM = anos.map(a => ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100);
         Plotly.newPlot('lineChart', [{ 
-          x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#9f2d2d', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>' 
+        x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#d55e00', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>'
         }], { margin: {t: 20, r: 20, b: 30, l: 40}, yaxis: {ticksuffix: '%'} }, {displayModeBar: false});
         get("lineNote").innerHTML = `La RM concentra <b>más del ${Math.floor(serieRM[serieRM.length-1])}%</b> del país, estancando la descentralización educativa.`;
 
@@ -92,7 +92,7 @@
           y: [d.v15, d.v25],
           type: 'scatter', mode: 'lines+markers+text',
           text: [` ${d.v15.toFixed(0)}`, ` ${d.v25.toFixed(0)}`], textposition: ['middle left', 'middle right'],
-          line: {color: normalizar(d.reg).includes("metropolitana") ? '#9f2d2d' : '#9ca3af', width: normalizar(d.reg).includes("metropolitana") ? 3 : 1.5},
+          line: {color: normalizar(d.reg).includes("metropolitana") ? '#d55e00' : '#9ca3af', width: normalizar(d.reg).includes("metropolitana") ? 3 : 1.5},
           marker: {size: 8}
         }));
 
@@ -110,7 +110,7 @@
           y: dEnd.map(d => d.NOM_REGION),
           orientation: 'h',
           marker: {
-            color: dEnd.map(d => normalizar(d.NOM_REGION).includes("metropolitana") ? '#9f2d2d' : '#60a5fa')
+            color: dEnd.map(d => normalizar(d.NOM_REGION).includes("metropolitana") ? '#d55e00' : '#9ca3af')
           },
           text: dEnd.map(d => d.TOTAL.toLocaleString('es-CL')),
           textposition: 'outside',
@@ -119,6 +119,76 @@
           margin: {t: 10, r: 60, b: 40, l: 150},
           xaxis: {title: 'Total Matriculados'},
         }, {displayModeBar: false});
+
+        // Sonificación con Tone.js
+        const audioUrl = "/sounds/cafeteria.mp3";
+
+        const player = new Tone.Player({url: audioUrl, loop: true, autostart: false });
+
+        // Efecto de acústica de la habitación (reverb)
+        const roomReverb = new Tone.Reverb({
+          decay: 3.5,
+          wet: 0.8
+        });
+
+        const volumeNode = new Tone.Volume(-Infinity).toDestination(); 
+
+        player.chain(roomReverb, volumeNode);
+
+        let audioLoaded = false;
+        let audioStarted = false;
+
+        Tone.loaded().then(() => {audioLoaded = true;});
+
+        document.addEventListener('mousedown', async () => {
+          if (!audioStarted && audioLoaded) {
+            await Tone.start();
+            player.start(); 
+            audioStarted = true;
+          }
+        });
+
+        // Función que calcula la acústica según la cantidad de alumnos
+        function getAcoustics(value, min, max) {
+          let normalized = (value - min) / (max - min);
+          
+          // Volumen incremental
+          const vol = -22 + (Math.pow(normalized, 1.5) * 18);
+          
+          // Eco de 0.8 (mucho eco = sala vacía) a 0.1 (casi sin eco = sala repleta de cuerpos)
+          const echo = 0.8 - (normalized * 0.7);
+
+          return { vol, echo };
+        }
+
+        setTimeout(() => {
+          const barChartElement = document.getElementById('barChart');
+          
+          barChartElement.on('plotly_hover', async function(data) {
+            if (!audioLoaded) return; 
+
+            if (!audioStarted) {
+              await Tone.start();
+              player.start();
+              audioStarted = true;
+            }
+
+            const currentValue = data.points[0].x; 
+            const allValues = data.points[0].data.x;
+            const minVal = Math.min(...allValues);
+            const maxVal = Math.max(...allValues);
+            const acoustics = getAcoustics(currentValue, minVal, maxVal);
+            
+            volumeNode.volume.rampTo(acoustics.vol, 0.1);
+            roomReverb.wet.rampTo(acoustics.echo, 0.1);
+          });
+
+          barChartElement.on('plotly_unhover', function() {
+            volumeNode.volume.rampTo(-Infinity, 0.4);
+            roomReverb.wet.rampTo(0.8, 0.4);
+          });
+          
+        }, 500);
 
       } catch (e) { get("errorMsg").textContent = "Error al cargar: " + e.message; }
     };
