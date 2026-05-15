@@ -117,10 +117,19 @@
         });
 
         function getAcoustics(value, min, max) {
-          let normalized = (value - min) / (max - min);
-          const vol = -22 + (Math.pow(normalized, 1.5) * 18);
-          const echo = 0.8 - (normalized * 0.7);
-          return { vol, echo };
+          const safeMin = Math.max(1, min);
+          const safeMax = Math.max(2, max);
+          const safeVal = Math.max(1, value);
+          const logMin = Math.log(safeMin);
+          const logMax = Math.log(safeMax);
+          const logVal = Math.log(safeVal);
+
+          let normalized = (logVal - logMin) / (logMax - logMin);
+
+          const vol = -24 + (normalized * 20);
+          const echo = 0.85 - (normalized * 0.75);
+
+          return {vol, echo};
         }
 
         setTimeout(() => {
