@@ -40,7 +40,7 @@
         
         <div class="footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf1f5;">
           <strong>Origen y procesamiento de datos:</strong><br>
-          Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula total. Finalmente, se generó un archivo resumen consolidado que fue usado como base para la visualización.
+          Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula TOTAL. Finalmente, se generó un archivo resumen consolidado que fue usado como base para la visualización.
         </div>
         <div class="error" id="errorMsg"></div>
       </article>
@@ -121,7 +121,7 @@
         }, {displayModeBar: false});
 
         // Sonificación con Tone.js
-        const audioUrl = "/sounds/cafeteria.mp3";
+        const audioUrl = "sounds/cafeteria.mp3";
 
         const player = new Tone.Player({url: audioUrl, loop: true, autostart: false });
 
