@@ -162,6 +162,7 @@
             const maxVal = Math.max(...allValues);
             const acoustics = getAcoustics(currentValue, minVal, maxVal);
             
+            
             volumeNode.volume.rampTo(acoustics.vol, 0.1);
             roomReverb.wet.rampTo(acoustics.echo, 0.1);
           });
