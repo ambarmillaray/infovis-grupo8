@@ -12,23 +12,17 @@
   <div class="wrap">
     <section class="hero">
       <h1>Centralización de la educación superior en Chile</h1>
-      <div class="subtitle">
+      <div class="annotation">
         <p>Históricamente, el fenómeno de la centralización en Chile ha limitado el desarrollo de la innovación y la economía en el resto de regiones, concentrando la toma de decisiones, recursos financieros y la oferta académica en la Región Metropolitana por sobre el resto de regiones. Esta desigualdad no solo responde a una mayor densidad poblacional en la capital, sino que a una oferta institucional centralizada, provocando que muchos estudiantes migren a Santiago en busca de mejores oportunidades educativas. Simultáneamente, las instituciones regionales enfrentan dificultades operativas y de consolidación debido a un modelo que no suele ajustarse a las necesidades locales.</p>
       </div>
     </section>
     
-    <section class="two-col">
+    <section class="one-col">
       <article class="card">
         <h2>Participación de la Región Metropolitana (2015-2025)</h2>
-        <p class="desc">Porcentaje de la matrícula total nacional concentrada en la capital.</p>
+        <p class="desc">Porcentaje de la matrícula total nacional concentrada en la capital. (Pasa el cursor sobre los puntos para escuchar la variación)</p>
         <div class="viz-wrap"><div id="lineChart"></div></div>
         <div class="annotation" id="lineNote"></div>
-      </article>
-
-      <article class="card">
-        <h2>Cambio territorial: Matrícula x 1.000 hab.</h2>
-        <p class="desc">Evolución de las tasas relativas entre el primer y último año.</p>
-        <div class="viz-wrap"><div id="slopeChart"></div></div>
       </article>
     </section>
 
@@ -66,7 +60,7 @@
         const csv = await fetchCSV("./resumen_superior.csv");
         const data = csv.map(d => ({ AGNO: +d.AGNO, NOM_REGION: d.NOM_REGION, TOTAL: +d.TOTAL_MATRICULA }));
         const anos = [...new Set(data.map(d => d.AGNO))].sort((a,b)=>a-b);
-        const yStart = anos[0], yEnd = anos[anos.length-1];
+        const yEnd = anos[anos.length-1];
         const tAno = {}, pReg = {};
         
         data.forEach(d => { tAno[d.AGNO] = (tAno[d.AGNO]||0) + d.TOTAL; pReg[d.NOM_REGION] = pReg[d.NOM_REGION] || {}; pReg[d.NOM_REGION][d.AGNO] = d.TOTAL; });
@@ -75,31 +69,9 @@
         // Gráfico de línea (Participación RM)
         const serieRM = anos.map(a => ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100);
         Plotly.newPlot('lineChart', [{ 
-        x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#d55e00', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>'
+          x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#d55e00', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>'
         }], { margin: {t: 20, r: 20, b: 30, l: 40}, yaxis: {ticksuffix: '%'} }, {displayModeBar: false});
         get("lineNote").innerHTML = `La RM concentra <b>más del ${Math.floor(serieRM[serieRM.length-1])}%</b> del país, estancando la descentralización educativa.`;
-
-        const pob = {"arica y parinacota":261000,"tarapaca":410000,"antofagasta":714000,"atacama":320000,"coquimbo":870000,"valparaiso":2020000,"metropolitana":8420000,"ohiggins":1020000,"maule":1170000,"nuble":520000,"biobio":1690000,"araucania":1030000,"los rios":411000,"los lagos":907000,"aysen":108000,"magallanes":182000};
-        
-        // Slope chart top 5 regiones
-        const top5 = Object.keys(pReg)
-          .map(r => ({ reg: r, v15: ((pReg[r][yStart]||0)/pob[normalizar(r)])*1000, v25: ((pReg[r][yEnd]||0)/pob[normalizar(r)])*1000 }))
-          .sort((a,b) => b.v25 - a.v25).slice(0, 5);
-
-        const slopeTraces = top5.map((d, i) => ({
-          name: d.reg,
-          x: [yStart.toString(), yEnd.toString()],
-          y: [d.v15, d.v25],
-          type: 'scatter', mode: 'lines+markers+text',
-          text: [` ${d.v15.toFixed(0)}`, ` ${d.v25.toFixed(0)}`], textposition: ['middle left', 'middle right'],
-          line: {color: normalizar(d.reg).includes("metropolitana") ? '#d55e00' : '#9ca3af', width: normalizar(d.reg).includes("metropolitana") ? 3 : 1.5},
-          marker: {size: 8}
-        }));
-
-        Plotly.newPlot('slopeChart', slopeTraces, {
-          margin: {t: 20, r: 60, b: 30, l: 60}, showlegend: true, legend: {orientation: 'h', y: -0.2}, 
-          xaxis: {type: 'category'}, hovermode: 'closest'
-        }, {displayModeBar: false});
 
         // Gráfico de barras ordenado
         const dEnd = data.filter(d=>d.AGNO===yEnd).sort((a,b) => a.TOTAL - b.TOTAL);
@@ -120,23 +92,19 @@
           xaxis: {title: 'Total Matriculados'},
         }, {displayModeBar: false});
 
-        // Sonificación con Tone.js
-        const audioUrl = "sounds/cafeteria.mp3";
-
-        const player = new Tone.Player({url: audioUrl, loop: true, autostart: false });
-
-        // Efecto de acústica de la habitación (reverb)
-        const roomReverb = new Tone.Reverb({
-          decay: 3.5,
-          wet: 0.8
-        });
-
-        const volumeNode = new Tone.Volume(-Infinity).toDestination(); 
-
-        player.chain(roomReverb, volumeNode);
-
         let audioLoaded = false;
         let audioStarted = false;
+
+        const lineSynth = new Tone.Synth({
+          oscillator: { type: "triangle" },
+          envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 1 }
+        }).toDestination();
+
+        const audioUrl = "sounds/cafeteria.mp3";
+        const player = new Tone.Player({url: audioUrl, loop: true, autostart: false });
+        const roomReverb = new Tone.Reverb({ decay: 3.5, wet: 0.8 });
+        const volumeNode = new Tone.Volume(-Infinity).toDestination(); 
+        player.chain(roomReverb, volumeNode);
 
         Tone.loaded().then(() => {audioLoaded = true;});
 
@@ -148,25 +116,40 @@
           }
         });
 
-        // Función que calcula la acústica según la cantidad de alumnos
         function getAcoustics(value, min, max) {
           let normalized = (value - min) / (max - min);
-          
-          // Volumen incremental
           const vol = -22 + (Math.pow(normalized, 1.5) * 18);
-          
-          // Eco de 0.8 (mucho eco = sala vacía) a 0.1 (casi sin eco = sala repleta de cuerpos)
           const echo = 0.8 - (normalized * 0.7);
-
           return { vol, echo };
         }
 
         setTimeout(() => {
           const barChartElement = document.getElementById('barChart');
+          const lineChartElement = document.getElementById('lineChart');
           
+          // Sonificación para gráfico de líneas
+          lineChartElement.on('plotly_hover', async function(data) {
+            if (!audioStarted) {
+              await Tone.start();
+              if(audioLoaded) player.start();
+              audioStarted = true;
+            }
+
+            const yVal = data.points[0].y; 
+            const allY = data.points[0].data.y;
+            const minY = Math.min(...allY);
+            const maxY = Math.max(...allY);
+            
+
+            const normalized = (yVal - minY) / (maxY - minY || 1);
+            const freq = 200 + (normalized * 600); 
+            
+            lineSynth.triggerAttackRelease(freq, "0.1");
+          });
+
+          // Sonificación para gráfico de barras ordenado
           barChartElement.on('plotly_hover', async function(data) {
             if (!audioLoaded) return; 
-
             if (!audioStarted) {
               await Tone.start();
               player.start();
