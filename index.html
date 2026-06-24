@@ -6,13 +6,14 @@
   <title>Centralización de la educación superior en Chile</title>
   <link rel="stylesheet" href="style.css"/>
   <style>
+    /* TU CSS ORIGINAL INTACTO */
     #hand-cursor {
       position: fixed;
       width: 22px; height: 22px;
       background: #f5c842;
       border: 2px solid #fff;
       border-radius: 50%;
-      pointer-events: none;
+      pointer-events: none; /* CRÍTICO: permite que el "clic" pase a través del cursor hacia el mapa */
       z-index: 9999;
       transform: translate(-50%,-50%);
       display: none;
@@ -36,14 +37,13 @@
     #map-container {
       position: relative;
       display: flex;
-      gap: 32px; /* Ligeramente más espacio para respirar */
+      gap: 24px;
       align-items: flex-start;
       flex-wrap: wrap;
-      justify-content: center; /* Centra los elementos si la pantalla es más pequeña */
     }
     #map-svg-wrap {
-      flex: 0 0 450px; /* Aumentado desde 340px */
-      max-width: 450px;
+      flex: 0 0 340px;
+      max-width: 340px;
     }
     #map-svg-wrap svg {
       width: 100%;
@@ -63,23 +63,22 @@
     }
     #map-info {
       flex: 1;
-      min-width: 280px; /* Aumentado para mejor legibilidad */
-      margin-top: 20px; /* Ajuste visual al lado del mapa más grande */
+      min-width: 220px;
     }
     #map-info h3 {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: 600;
       margin: 0 0 6px;
       color: #111;
     }
     #map-info .matricula-num {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
       color: #d55e00;
       line-height: 1.1;
     }
     #map-info .matricula-label {
-      font-size: .9rem;
+      font-size: .8rem;
       color: #6b7280;
       margin-bottom: 12px;
     }
@@ -97,22 +96,20 @@
       transition: width .4s ease;
     }
     #map-info .pct-label {
-      font-size: .85rem;
+      font-size: .78rem;
       color: #6b7280;
     }
     #map-info .hint {
-      font-size: .9rem;
+      font-size: .82rem;
       color: #9ca3af;
       margin-top: 24px;
       font-style: italic;
     }
-
-    /* Leyenda */
     #legend {
       display: flex;
       align-items: center;
       gap: 0;
-      margin-top: 16px;
+      margin-top: 12px;
     }
     #legend-gradient {
       height: 10px;
@@ -122,12 +119,20 @@
     .legend-labels {
       display: flex;
       justify-content: space-between;
-      font-size: .8rem;
+      font-size: .72rem;
       color: #6b7280;
-      margin-top: 5px;
+      margin-top: 3px;
     }
   </style>
 </head>
+<div id="start-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 255, 255, 0.95); z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h2 style="margin-bottom: 20px;">Controla el mapa con tu mano</h2>
+    <p style="margin-bottom: 30px; color: #6b7280;">Apunta a la pantalla para explorar las regiones.</p>
+    <button onclick="iniciarExperiencia()" style="padding: 12px 24px; font-size: 16px; background: #d55e00; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+        Comenzar
+    </button>
+</div>
+
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.min.js"></script>
@@ -135,9 +140,9 @@
   <script src="config.js"></script>
 
   <div id="hand-cursor"></div>
-  <div id="hand-status">✋ Sensor desconectado</div>
+  <div id="hand-status">Sensor desconectado</div>
 
-  <div class="wrap" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+  <div class="wrap">
     <section class="hero">
       <h1>Centralización de la educación superior en Chile</h1>
       <div class="annotation">
@@ -152,10 +157,10 @@
 
         <div id="map-container">
           <div id="map-svg-wrap">
-            <svg id="chile-map" viewBox="0 0 450 1100" xmlns="http://www.w3.org/2000/svg"></svg>
+            <svg id="chile-map" viewBox="0 0 340 900" xmlns="http://www.w3.org/2000/svg"></svg>
             <div style="margin-top:10px;">
               <div id="legend">
-                <canvas id="legend-gradient" width="450" height="10"></canvas>
+                <canvas id="legend-gradient" width="300" height="10"></canvas>
               </div>
               <div class="legend-labels">
                 <span>Menor matrícula</span>
@@ -181,55 +186,17 @@
   </div>
 
   <script>
-    /* ── Datos de matrícula (codregion → total) ── */
-    const MATRICULA = {
-      15: 18234,   // Arica y Parinacota
-      1:  26810,   // Tarapacá
-      2:  48920,   // Antofagasta
-      3:  18540,   // Atacama
-      4:  52310,   // Coquimbo
-      5:  120450,  // Valparaíso
-      13: 420800,  // Metropolitana
-      6:  44320,   // O'Higgins
-      7:  52100,   // Maule
-      16: 28900,   // Ñuble
-      8:  105600,  // Biobío
-      9:  60400,   // Araucanía
-      14: 32100,   // Los Ríos
-      10: 50200,   // Los Lagos
-      11: 8400,    // Aysén
-      12: 14200    // Magallanes
-    };
-
-    const NOMBRES = {
-      15: 'Arica y Parinacota',
-      1:  'Tarapacá',
-      2:  'Antofagasta',
-      3:  'Atacama',
-      4:  'Coquimbo',
-      5:  'Valparaíso',
-      13: 'Metropolitana de Santiago',
-      6:  "O'Higgins",
-      7:  'Maule',
-      16: 'Ñuble',
-      8:  'Biobío',
-      9:  'La Araucanía',
-      14: 'Los Ríos',
-      10: 'Los Lagos',
-      11: 'Aysén',
-      12: 'Magallanes y Antártica'
-    };
+    const MATRICULA = { 15: 18234, 1: 26810, 2: 48920, 3: 18540, 4: 52310, 5: 120450, 13: 420800, 6: 44320, 7: 52100, 16: 28900, 8: 105600, 9: 60400, 14: 32100, 10: 50200, 11: 8400, 12: 14200 };
+    const NOMBRES = { 15: 'Arica y Parinacota', 1: 'Tarapacá', 2: 'Antofagasta', 3: 'Atacama', 4: 'Coquimbo', 5: 'Valparaíso', 13: 'Metropolitana de Santiago', 6: "O'Higgins", 7: 'Maule', 16: 'Ñuble', 8: 'Biobío', 9: 'La Araucanía', 14: 'Los Ríos', 10: 'Los Lagos', 11: 'Aysén', 12: 'Magallanes y Antártica' };
 
     const totalNacional = Object.values(MATRICULA).reduce((a,b) => a+b, 0);
     const maxMatricula  = Math.max(...Object.values(MATRICULA));
     const minMatricula  = Math.min(...Object.values(MATRICULA));
 
-    /* ── Paleta daltónico-friendly: Viridis (amarillo→verde→azul) ── */
     const colorScale = d3.scaleSequential()
       .domain([minMatricula, maxMatricula])
       .interpolator(d3.interpolateViridis);
 
-    /* ── Leyenda ── */
     function drawLegend() {
       const canvas = document.getElementById('legend-gradient');
       const ctx = canvas.getContext('2d');
@@ -242,13 +209,11 @@
       }
     }
 
-    /* ── Panel de detalle ── */
     let activeRegion = null;
 
     function mostrarDetalle(codregion) {
       if (activeRegion === codregion) return;
       activeRegion = codregion;
-
       const nombre = NOMBRES[codregion] || 'Región ' + codregion;
       const total  = MATRICULA[codregion] || 0;
       const pct    = ((total / totalNacional) * 100).toFixed(1);
@@ -277,7 +242,6 @@
         `<p class="hint">Apunta a una región para ver su detalle</p>`;
     }
 
-    /* ── Audio (Tone.js) ── */
     let audioStarted = false, audioLoaded = false;
     let player, roomReverb, volumeNode;
 
@@ -316,19 +280,11 @@
       roomReverb.wet.rampTo(0.7, 0.4);
     }
 
-    /* ── D3: proyección + render ── */
     function buildMap(geojson) {
       const svg = d3.select('#chile-map');
-      // Nuevas dimensiones proporcionales a la interfaz ampliada
-      const W = 450, H = 1100;
-
-      const projection = d3.geoMercator()
-        .fitSize([W, H], geojson);
-
+      const W = 340, H = 900;
+      const projection = d3.geoMercator().fitSize([W, H], geojson);
       const pathGen = d3.geoPath().projection(projection);
-
-      /* Guardar centroides para detección por mano */
-      window._regionCentroids = {};
 
       svg.selectAll('path.region-path')
         .data(geojson.features)
@@ -349,76 +305,56 @@
           limpiarDetalle();
           silenciarAudio();
         });
-
-      /* Guardar centroides en px para hand sensor */
-      geojson.features.forEach(feat => {
-        const cod = feat.properties.codregion;
-        const centroid = pathGen.centroid(feat);
-        window._regionCentroids[cod] = centroid;
-      });
     }
 
-    /* ── Detección por hand sensor ── */
-    /* Encuentra la región más cercana al punto (x,y) en coordenadas de pantalla */
-    function regionMasCercana(px, py) {
-      const svgEl  = document.getElementById('chile-map');
-      const rect   = svgEl.getBoundingClientRect();
-      
-      // Actualizado con las nuevas dimensiones de la proyección
-      const scaleX = 450 / rect.width;
-      const scaleY = 1100 / rect.height;
-      const svgX   = (px - rect.left) * scaleX;
-      const svgY   = (py - rect.top)  * scaleY;
-
-      /* Fuera del área del mapa actualizado */
-      if (svgX < 0 || svgX > 450 || svgY < 0 || svgY > 1100) return null;
-
-      let bestCod = null, bestDist = Infinity;
-      for (const [cod, [cx, cy]] of Object.entries(window._regionCentroids || {})) {
-        const dx = svgX - cx, dy = svgY - cy;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < bestDist) { bestDist = dist; bestCod = parseInt(cod); }
+    function regionExactaBajoElCursor(px, py) {
+      // mapeamos el cursor en la pantalla
+      const elementoBajoCursor = document.elementFromPoint(px, py);
+      // detecta si el elemento bajo el cursor corresponde a un svg
+      if (elementoBajoCursor && elementoBajoCursor.classList.contains('region-path')) {
+        return parseInt(elementoBajoCursor.getAttribute('data-cod'));
       }
-      /* Solo activar si está razonablemente cerca (< 80px SVG) */
-      return bestDist < 80 ? bestCod : null;
+      
+      return null;
     }
 
     let lastHandCod = null;
     const handCursor = document.getElementById('hand-cursor');
     const handStatus = document.getElementById('hand-status');
-
     const mapValue = (v, a, b, c, d) => ((v-a)/(b-a))*(d-c)+c;
 
-    Protobject.Core.onReceived(async (data) => {
-      handStatus.textContent = '✋ Sensor activo';
-      handStatus.classList.add('connected');
-      handCursor.style.display = 'block';
+Protobject.Core.onReceived(async (data) => {
+    handStatus.textContent = 'Sensor activo';
+    handStatus.classList.add('connected');
+    handCursor.style.display = 'block';
 
-      const cx = mapValue(data.x, 0.2, 0.8, 0, window.innerWidth);
-      const cy = mapValue(data.y, 0.2, 0.8, 0, window.innerHeight);
-      handCursor.style.left = cx + 'px';
-      handCursor.style.top  = cy + 'px';
+    const cx = mapValue(data.x, 0.2, 0.8, 0, window.innerWidth);
+    const cy = mapValue(data.y, 0.2, 0.8, 0, window.innerHeight);
+    handCursor.style.left = cx + 'px';
+    handCursor.style.top  = cy + 'px';
 
-      const cod = regionMasCercana(cx, cy);
+    const cod = regionExactaBajoElCursor(cx, cy);
 
-      if (cod !== null && cod !== lastHandCod) {
+    if (cod !== null && cod !== lastHandCod) {
         lastHandCod = cod;
         handCursor.classList.add('active');
         d3.selectAll('.region-path').classed('hovered', false);
         d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
         mostrarDetalle(cod);
-        await ensureAudio();
-        sonificarRegion(cod);
-      } else if (cod === null && lastHandCod !== null) {
+        
+        if (audioStarted) {
+            sonificarRegion(cod);
+        }
+    } else if (cod === null && lastHandCod !== null) {
         lastHandCod = null;
         handCursor.classList.remove('active');
         d3.selectAll('.region-path').classed('hovered', false);
         limpiarDetalle();
         silenciarAudio();
-      }
+    }
 
-      resetHandTimeout();
-    });
+    resetHandTimeout();
+});
 
     let handTimer;
     function resetHandTimeout() {
@@ -435,8 +371,15 @@
       }, 2000);
     }
 
-    /* ── Inicialización ── */
-    window.addEventListener('mousedown', ensureAudio);
+    async function iniciarExperiencia() {
+    await Tone.start();
+        if (!audioStarted && audioLoaded) {
+        player.start();
+        audioStarted = true;
+    }
+    
+    document.getElementById('start-overlay').style.display = 'none';
+}
 
     fetch('./regiones.json')
       .then(r => r.json())

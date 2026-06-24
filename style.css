@@ -48,14 +48,16 @@ h1 {
 }
 
 .two-col {
-  display: grid;
+  display: inline-grid;
+  width: 100%;
   grid-template-columns: 1fr 1fr;
   gap: 22px;
   margin-bottom: 22px;
 }
 
 .one-col {
-  display: grid;
+  display: inline-grid;
+  width: 100%;
   grid-template-columns: 1fr;
   gap: 22px;
 }
@@ -95,7 +97,8 @@ svg {
 }
 
 .mini-stats {
-  display: grid;
+  display: inline-grid;
+  width: 100%;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 14px;
@@ -227,4 +230,43 @@ svg {
   h1 {
     font-size: 30px;
   }
+}
+#hand-cursor {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  background: #d55e00;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  display: none;
+  box-shadow: 0 0 0 4px rgba(213,94,0,0.25);
+  transition: background 0.15s;
+}
+#hand-cursor.active {
+  background: #fff;
+  border-color: #d55e00;
+}
+
+#hand-status {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  z-index: 9999;
+  transition: background 0.3s, color 0.3s;
+}
+#hand-status.connected {
+  background: #d55e00;
+  color: #fff;
+  border-color: transparent;
 }
