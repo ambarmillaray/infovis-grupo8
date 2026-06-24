@@ -22,48 +22,46 @@
   <div id="hand-cursor"></div>
   <div id="hand-status">Sensor desconectado</div>
 
-  <div class="wrap">
-    <section class="hero">
-      <h1>Centralización de la educación superior en Chile</h1>
-      <div class="annotation">
-        <p>Históricamente, el fenómeno de la centralización en Chile ha limitado el desarrollo de la innovación y la economía en el resto de regiones, concentrando la toma de decisiones, recursos financieros y la oferta académica en la Región Metropolitana por sobre el resto de regiones. Esta desigualdad no solo responde a una mayor densidad poblacional en la capital, sino que a una oferta institucional centralizada, provocando que muchos estudiantes migren a Santiago en busca de mejores oportunidades educativas. Simultáneamente, las instituciones regionales enfrentan dificultades operativas y de consolidación debido a un modelo que no suele ajustarse a las necesidades locales.</p>
+  <div class="wrap main-layout">
+    
+    <div id="left-panel">
+      <div id="map-svg-wrap">
+        <svg id="chile-map" viewBox="0 0 300 750" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="legend-wrap">
+          <div id="legend">
+            <canvas id="legend-gradient" width="300" height="10"></canvas>
+          </div>
+          <div class="legend-labels">
+            <span>Menor matrícula</span>
+            <span>Mayor matrícula</span>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <section class="one-col">
+    <div id="right-panel">
+      <section class="hero">
+        <h1>Centralización de la educación superior en Chile</h1>
+        <div class="annotation">
+          <p>El fenómeno de la centralización en Chile ha limitado el desarrollo de la innovación y la economía en el resto de las regiones, concentrando la oferta académica en la Región Metropolitana. Esta desigualdad no solo responde a una mayor densidad poblacional en la capital, sino que, a una oferta institucional centralizada, provocando que muchos estudiantes migren a Santiago en busca de mejores oportunidades educativas.</p>
+        </div>
+      </section>
+
       <article class="card">
         <h2>Matrícula por región (2025)</h2>
         <p class="desc">Intensidad del color según volumen de estudiantes matriculados. La Región Metropolitana concentra más de la mitad de la matrícula nacional.</p>
 
-        <div id="map-container">
-          <div id="map-svg-wrap">
-            <svg id="chile-map" viewBox="0 0 340 900" xmlns="http://www.w3.org/2000/svg"></svg>
-            <div style="margin-top:10px;">
-              <div id="legend">
-                <canvas id="legend-gradient" width="300" height="10"></canvas>
-              </div>
-              <div class="legend-labels">
-                <span>Menor matrícula</span>
-                <span>Mayor matrícula</span>
-              </div>
-            </div>
-          </div>
-
-          <div id="map-info">
-            <div id="region-detail">
-              <p class="hint">Apunta a una región para ver su detalle</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer" style="margin-top:24px; padding-top:16px; border-top:1px solid #edf1f5;">
+        <div class="footer">
           <strong>Origen y procesamiento de datos:</strong><br>
           Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula TOTAL.
         </div>
         <div class="error" id="errorMsg"></div>
       </article>
-    </section>
+    </div>
+
   </div>
+
+  <div id="map-tooltip" class="tooltip"></div>
 
   <script>
     const MATRICULA = { 15: 18234, 1: 26810, 2: 48920, 3: 18540, 4: 52310, 5: 120450, 13: 420800, 6: 44320, 7: 52100, 16: 28900, 8: 105600, 9: 60400, 14: 32100, 10: 50200, 11: 8400, 12: 14200 };
@@ -75,7 +73,7 @@
 
     const colorScale = d3.scaleSequential()
       .domain([minMatricula, maxMatricula])
-      .interpolator(d3.interpolateViridis);
+      .interpolator(t => d3.interpolateReds(0.20 + t * 0.80));
 
     function drawLegend() {
       const canvas = document.getElementById('legend-gradient');
@@ -91,8 +89,13 @@
 
     let activeRegion = null;
 
-    function mostrarDetalle(codregion) {
-      if (activeRegion === codregion) return;
+    function moverTooltip(x, y) {
+      const tooltip = document.getElementById('map-tooltip');
+      tooltip.style.left = (x + 24) + 'px';
+      tooltip.style.top = (y + 24) + 'px';
+    }
+
+    function mostrarDetalle(codregion, x, y) {
       activeRegion = codregion;
       const nombre = NOMBRES[codregion] || 'Región ' + codregion;
       const total  = MATRICULA[codregion] || 0;
@@ -100,7 +103,8 @@
       const pctRM  = ((MATRICULA[13] / totalNacional) * 100).toFixed(1);
       const esPCRM = codregion === 13;
 
-      document.getElementById('region-detail').innerHTML = `
+      const tooltip = document.getElementById('map-tooltip');
+      tooltip.innerHTML = `
         <h3>Región de ${nombre}</h3>
         <div class="matricula-num">${total.toLocaleString('es-CL')}</div>
         <div class="matricula-label">estudiantes matriculados (2025)</div>
@@ -108,18 +112,17 @@
           <div class="pct-bar" style="width:${pct}%; background:${colorScale(total)};"></div>
         </div>
         <div class="pct-label">${pct}% de la matrícula nacional</div>
-        ${!esPCRM ? `<div class="pct-label" style="margin-top:6px;color:#d55e00;">
-          La RM concentra ${pctRM}% — ${(MATRICULA[13]/total).toFixed(1)} veces más que esta región
-        </div>` : `<div class="pct-label" style="margin-top:6px;color:#d55e00;">
-          Concentra más del doble que todas las demás regiones juntas
-        </div>`}
+        <div class="comparison-label">
+          ${!esPCRM ? `La RM concentra ${pctRM}% — ${(MATRICULA[13]/total).toFixed(1)} veces más` : `Concentra más del doble que el resto junto`}
+        </div>
       `;
+      tooltip.style.opacity = '1';
+      moverTooltip(x, y);
     }
 
     function limpiarDetalle() {
       activeRegion = null;
-      document.getElementById('region-detail').innerHTML =
-        `<p class="hint">Apunta a una región para ver su detalle</p>`;
+      document.getElementById('map-tooltip').style.opacity = '0';
     }
 
     let audioStarted = false, audioLoaded = false;
@@ -162,8 +165,13 @@
 
     function buildMap(geojson) {
       const svg = d3.select('#chile-map');
-      const W = 340, H = 900;
-      const projection = d3.geoMercator().fitSize([W, H], geojson);
+      const W = 300, H = 750;
+      
+      const projection = d3.geoMercator()
+        .center([-71.5, -37])
+        .scale(800)
+        .translate([W / 2, H / 2]);
+
       const pathGen = d3.geoPath().projection(projection);
 
       svg.selectAll('path.region-path')
@@ -176,9 +184,12 @@
         .on('mouseover', function(event, d) {
           d3.selectAll('.region-path').classed('hovered', false);
           d3.select(this).classed('hovered', true);
-          mostrarDetalle(d.properties.codregion);
+          mostrarDetalle(d.properties.codregion, event.pageX, event.pageY);
           ensureAudio();
           sonificarRegion(d.properties.codregion);
+        })
+        .on('mousemove', function(event) {
+          moverTooltip(event.pageX, event.pageY);
         })
         .on('mouseout', function() {
           d3.select(this).classed('hovered', false);
@@ -212,15 +223,19 @@
 
         const cod = regionExactaBajoElCursor(cx, cy);
 
-        if (cod !== null && cod !== lastHandCod) {
-            lastHandCod = cod;
-            handCursor.classList.add('active');
-            d3.selectAll('.region-path').classed('hovered', false);
-            d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
-            mostrarDetalle(cod);
-            
-            if (audioStarted) {
-                sonificarRegion(cod);
+        if (cod !== null) {
+            if (cod !== lastHandCod) {
+                lastHandCod = cod;
+                handCursor.classList.add('active');
+                d3.selectAll('.region-path').classed('hovered', false);
+                d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
+                mostrarDetalle(cod, cx, cy);
+                
+                if (audioStarted) {
+                    sonificarRegion(cod);
+                }
+            } else {
+                moverTooltip(cx, cy);
             }
         } else if (cod === null && lastHandCod !== null) {
             lastHandCod = null;
