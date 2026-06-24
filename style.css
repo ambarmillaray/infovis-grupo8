@@ -134,6 +134,99 @@ svg {
   line-height: 1.5;
 }
 
+/* ── INTERFAZ DEL MAPA Y CONTENEDORES ── */
+#map-container {
+  position: relative;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+#map-svg-wrap {
+  flex: 0 0 340px;
+  max-width: 340px;
+}
+
+.region-path {
+  cursor: pointer;
+  transition: stroke-width .15s;
+  stroke: #fff;
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+.region-path:hover, .region-path.hovered {
+  stroke-width: 2.2;
+  stroke: #fff;
+}
+
+#map-info {
+  flex: 1;
+  min-width: 220px;
+}
+
+#map-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: #111;
+}
+
+#map-info .matricula-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #d55e00;
+  line-height: 1.1;
+}
+
+#map-info .matricula-label {
+  font-size: .8rem;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+#map-info .pct-bar-wrap {
+  background: #f3f4f6;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+#map-info .pct-bar {
+  height: 8px;
+  border-radius: 6px;
+  background: #d55e00;
+  transition: width .4s ease;
+}
+
+#map-info .pct-label {
+  font-size: .78rem;
+  color: #6b7280;
+}
+
+#map-info .hint {
+  font-size: .82rem;
+  color: #9ca3af;
+  margin-top: 24px;
+  font-style: italic;
+}
+
+/* ── LEYENDA DEL GRADIENTE ── */
+#legend {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 12px;
+}
+
+#legend-gradient {
+  height: 10px;
+  flex: 1;
+  border-radius: 4px;
+}
+
 .legend-title {
   margin: 14px 0 8px;
   font-size: 13px;
@@ -156,6 +249,7 @@ svg {
   color: var(--muted);
 }
 
+/* ── ELEMENTOS DE COMPLEMENTO INTERNO ── */
 .ranking-title {
   margin: 18px 0 10px;
   font-size: 18px;
@@ -223,14 +317,42 @@ svg {
   font-size: 14px;
 }
 
-@media (max-width: 980px) {
-  .two-col {
-    grid-template-columns: 1fr;
-  }
-  h1 {
-    font-size: 30px;
-  }
+/* ── PANTALLA DE INICIO (OVERLAY) ── */
+#start-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
+#start-overlay h2 {
+  margin-bottom: 20px;
+}
+
+#start-overlay p {
+  margin-bottom: 30px;
+  color: #6b7280;
+}
+
+#start-overlay button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #d55e00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* ── CURSOR Y ESTADO DEL SENSOR PROTOBJECT ── */
 #hand-cursor {
   position: fixed;
   width: 24px;
@@ -242,9 +364,10 @@ svg {
   z-index: 9999;
   transform: translate(-50%, -50%);
   display: none;
-  box-shadow: 0 0 0 4px rgba(213,94,0,0.25);
+  box-shadow: 0 0 0 4px rgba(213, 94, 0, 0.25);
   transition: background 0.15s;
 }
+
 #hand-cursor.active {
   background: #fff;
   border-color: #d55e00;
@@ -265,8 +388,19 @@ svg {
   z-index: 9999;
   transition: background 0.3s, color 0.3s;
 }
+
 #hand-status.connected {
   background: #d55e00;
   color: #fff;
   border-color: transparent;
+}
+
+/* ── DISEÑO RESPONSIVO ── */
+@media (max-width: 980px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  h1 {
+    font-size: 30px;
+  }
 }

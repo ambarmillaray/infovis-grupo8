@@ -5,135 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Centralización de la educación superior en Chile</title>
   <link rel="stylesheet" href="style.css"/>
-  <style>
-    /* TU CSS ORIGINAL INTACTO */
-    #hand-cursor {
-      position: fixed;
-      width: 22px; height: 22px;
-      background: #f5c842;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      pointer-events: none; /* CRÍTICO: permite que el "clic" pase a través del cursor hacia el mapa */
-      z-index: 9999;
-      transform: translate(-50%,-50%);
-      display: none;
-      transition: background .15s, width .15s, height .15s;
-    }
-    #hand-cursor.active {
-      background: #fff;
-      border-color: #f5c842;
-      width: 28px; height: 28px;
-    }
-    #hand-status {
-      position: fixed; bottom: 18px; right: 18px;
-      padding: 6px 14px; border-radius: 20px;
-      font-size: .78rem; font-weight: 600;
-      background: #f3f4f6; color: #6b7280;
-      border: 1px solid #e5e7eb; z-index: 9999;
-      transition: background .3s, color .3s;
-    }
-    #hand-status.connected { background: #d55e00; color: #fff; border-color: transparent; }
-
-    #map-container {
-      position: relative;
-      display: flex;
-      gap: 24px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-    #map-svg-wrap {
-      flex: 0 0 340px;
-      max-width: 340px;
-    }
-    #map-svg-wrap svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .region-path {
-      cursor: pointer;
-      transition: stroke-width .15s;
-      stroke: #fff;
-      stroke-width: 0.8;
-      stroke-linejoin: round;
-    }
-    .region-path:hover, .region-path.hovered {
-      stroke-width: 2.2;
-      stroke: #fff;
-    }
-    #map-info {
-      flex: 1;
-      min-width: 220px;
-    }
-    #map-info h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 6px;
-      color: #111;
-    }
-    #map-info .matricula-num {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #d55e00;
-      line-height: 1.1;
-    }
-    #map-info .matricula-label {
-      font-size: .8rem;
-      color: #6b7280;
-      margin-bottom: 12px;
-    }
-    #map-info .pct-bar-wrap {
-      background: #f3f4f6;
-      border-radius: 6px;
-      height: 8px;
-      overflow: hidden;
-      margin-bottom: 4px;
-    }
-    #map-info .pct-bar {
-      height: 8px;
-      border-radius: 6px;
-      background: #d55e00;
-      transition: width .4s ease;
-    }
-    #map-info .pct-label {
-      font-size: .78rem;
-      color: #6b7280;
-    }
-    #map-info .hint {
-      font-size: .82rem;
-      color: #9ca3af;
-      margin-top: 24px;
-      font-style: italic;
-    }
-    #legend {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      margin-top: 12px;
-    }
-    #legend-gradient {
-      height: 10px;
-      flex: 1;
-      border-radius: 4px;
-    }
-    .legend-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: .72rem;
-      color: #6b7280;
-      margin-top: 3px;
-    }
-  </style>
 </head>
-<div id="start-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 255, 255, 0.95); z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <h2 style="margin-bottom: 20px;">Controla el mapa con tu mano</h2>
-    <p style="margin-bottom: 30px; color: #6b7280;">Apunta a la pantalla para explorar las regiones.</p>
-    <button onclick="iniciarExperiencia()" style="padding: 12px 24px; font-size: 16px; background: #d55e00; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-        Comenzar
-    </button>
-</div>
-
 <body>
+
+  <div id="start-overlay">
+    <h2>Controla el mapa con tu mano</h2>
+    <p>Apunta a la pantalla para explorar las regiones.</p>
+    <button onclick="iniciarExperiencia()">Comenzar</button>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.min.js"></script>
   <script src="https://app.protobject.com/framework/p.js"></script>
@@ -308,13 +188,10 @@
     }
 
     function regionExactaBajoElCursor(px, py) {
-      // mapeamos el cursor en la pantalla
       const elementoBajoCursor = document.elementFromPoint(px, py);
-      // detecta si el elemento bajo el cursor corresponde a un svg
       if (elementoBajoCursor && elementoBajoCursor.classList.contains('region-path')) {
         return parseInt(elementoBajoCursor.getAttribute('data-cod'));
       }
-      
       return null;
     }
 
@@ -323,38 +200,38 @@
     const handStatus = document.getElementById('hand-status');
     const mapValue = (v, a, b, c, d) => ((v-a)/(b-a))*(d-c)+c;
 
-Protobject.Core.onReceived(async (data) => {
-    handStatus.textContent = 'Sensor activo';
-    handStatus.classList.add('connected');
-    handCursor.style.display = 'block';
+    Protobject.Core.onReceived(async (data) => {
+        handStatus.textContent = 'Sensor activo';
+        handStatus.classList.add('connected');
+        handCursor.style.display = 'block';
 
-    const cx = mapValue(data.x, 0.2, 0.8, 0, window.innerWidth);
-    const cy = mapValue(data.y, 0.2, 0.8, 0, window.innerHeight);
-    handCursor.style.left = cx + 'px';
-    handCursor.style.top  = cy + 'px';
+        const cx = mapValue(data.x, 0.2, 0.8, 0, window.innerWidth);
+        const cy = mapValue(data.y, 0.2, 0.8, 0, window.innerHeight);
+        handCursor.style.left = cx + 'px';
+        handCursor.style.top  = cy + 'px';
 
-    const cod = regionExactaBajoElCursor(cx, cy);
+        const cod = regionExactaBajoElCursor(cx, cy);
 
-    if (cod !== null && cod !== lastHandCod) {
-        lastHandCod = cod;
-        handCursor.classList.add('active');
-        d3.selectAll('.region-path').classed('hovered', false);
-        d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
-        mostrarDetalle(cod);
-        
-        if (audioStarted) {
-            sonificarRegion(cod);
+        if (cod !== null && cod !== lastHandCod) {
+            lastHandCod = cod;
+            handCursor.classList.add('active');
+            d3.selectAll('.region-path').classed('hovered', false);
+            d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
+            mostrarDetalle(cod);
+            
+            if (audioStarted) {
+                sonificarRegion(cod);
+            }
+        } else if (cod === null && lastHandCod !== null) {
+            lastHandCod = null;
+            handCursor.classList.remove('active');
+            d3.selectAll('.region-path').classed('hovered', false);
+            limpiarDetalle();
+            silenciarAudio();
         }
-    } else if (cod === null && lastHandCod !== null) {
-        lastHandCod = null;
-        handCursor.classList.remove('active');
-        d3.selectAll('.region-path').classed('hovered', false);
-        limpiarDetalle();
-        silenciarAudio();
-    }
 
-    resetHandTimeout();
-});
+        resetHandTimeout();
+    });
 
     let handTimer;
     function resetHandTimeout() {
@@ -372,14 +249,13 @@ Protobject.Core.onReceived(async (data) => {
     }
 
     async function iniciarExperiencia() {
-    await Tone.start();
-        if (!audioStarted && audioLoaded) {
-        player.start();
-        audioStarted = true;
+      await Tone.start();
+      if (!audioStarted && audioLoaded) {
+          player.start();
+          audioStarted = true;
+      }
+      document.getElementById('start-overlay').style.display = 'none';
     }
-    
-    document.getElementById('start-overlay').style.display = 'none';
-}
 
     fetch('./regiones.json')
       .then(r => r.json())
