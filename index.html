@@ -1,40 +1,179 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Centralización de la educación superior en Chile</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.min.js"></script>
+  <style>
+    #hand-cursor {
+      position: fixed;
+      width: 22px; height: 22px;
+      background: #f5c842;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      display: none;
+      transition: background .15s, width .15s, height .15s;
+    }
+    #hand-cursor.active {
+      background: #fff;
+      border-color: #f5c842;
+      width: 28px; height: 28px;
+    }
+    #hand-status {
+      position: fixed; bottom: 18px; right: 18px;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: .78rem; font-weight: 600;
+      background: #f3f4f6; color: #6b7280;
+      border: 1px solid #e5e7eb; z-index: 9999;
+      transition: background .3s, color .3s;
+    }
+    #hand-status.connected { background: #d55e00; color: #fff; border-color: transparent; }
+
+    #map-container {
+      position: relative;
+      display: flex;
+      gap: 32px; /* Ligeramente más espacio para respirar */
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center; /* Centra los elementos si la pantalla es más pequeña */
+    }
+    #map-svg-wrap {
+      flex: 0 0 450px; /* Aumentado desde 340px */
+      max-width: 450px;
+    }
+    #map-svg-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .region-path {
+      cursor: pointer;
+      transition: stroke-width .15s;
+      stroke: #fff;
+      stroke-width: 0.8;
+      stroke-linejoin: round;
+    }
+    .region-path:hover, .region-path.hovered {
+      stroke-width: 2.2;
+      stroke: #fff;
+    }
+    #map-info {
+      flex: 1;
+      min-width: 280px; /* Aumentado para mejor legibilidad */
+      margin-top: 20px; /* Ajuste visual al lado del mapa más grande */
+    }
+    #map-info h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0 0 6px;
+      color: #111;
+    }
+    #map-info .matricula-num {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #d55e00;
+      line-height: 1.1;
+    }
+    #map-info .matricula-label {
+      font-size: .9rem;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    #map-info .pct-bar-wrap {
+      background: #f3f4f6;
+      border-radius: 6px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    #map-info .pct-bar {
+      height: 8px;
+      border-radius: 6px;
+      background: #d55e00;
+      transition: width .4s ease;
+    }
+    #map-info .pct-label {
+      font-size: .85rem;
+      color: #6b7280;
+    }
+    #map-info .hint {
+      font-size: .9rem;
+      color: #9ca3af;
+      margin-top: 24px;
+      font-style: italic;
+    }
+
+    /* Leyenda */
+    #legend {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 16px;
+    }
+    #legend-gradient {
+      height: 10px;
+      flex: 1;
+      border-radius: 4px;
+    }
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: .8rem;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.min.js"></script>
+  <script src="https://app.protobject.com/framework/p.js"></script>
+  <script src="config.js"></script>
+
+  <div id="hand-cursor"></div>
+  <div id="hand-status">✋ Sensor desconectado</div>
+
+  <div class="wrap" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
     <section class="hero">
       <h1>Centralización de la educación superior en Chile</h1>
       <div class="annotation">
         <p>Históricamente, el fenómeno de la centralización en Chile ha limitado el desarrollo de la innovación y la economía en el resto de regiones, concentrando la toma de decisiones, recursos financieros y la oferta académica en la Región Metropolitana por sobre el resto de regiones. Esta desigualdad no solo responde a una mayor densidad poblacional en la capital, sino que a una oferta institucional centralizada, provocando que muchos estudiantes migren a Santiago en busca de mejores oportunidades educativas. Simultáneamente, las instituciones regionales enfrentan dificultades operativas y de consolidación debido a un modelo que no suele ajustarse a las necesidades locales.</p>
       </div>
     </section>
-    
-    <section class="one-col">
-      <article class="card">
-        <h2>Participación de la Región Metropolitana (2015-2025)</h2>
-        <p class="desc">Porcentaje de la matrícula total nacional concentrada en la capital.</p>
-        <div class="viz-wrap"><div id="lineChart"></div></div>
-        <div class="annotation" id="lineNote"></div>
-      </article>
-    </section>
 
     <section class="one-col">
       <article class="card">
-        <h2>Volumen de matrícula por región (2025)</h2>
-        <p class="desc">Distribución absoluta que demuestra la brecha abismal entre la RM y el resto del país.</p>
-        <div class="viz-wrap"><div id="barChart" style="height: 450px;"></div></div>
-        
-        <div class="footer" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #edf1f5;">
+        <h2>Matrícula por región (2025)</h2>
+        <p class="desc">Intensidad del color según volumen de estudiantes matriculados. La Región Metropolitana concentra más de la mitad de la matrícula nacional.</p>
+
+        <div id="map-container">
+          <div id="map-svg-wrap">
+            <svg id="chile-map" viewBox="0 0 450 1100" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div style="margin-top:10px;">
+              <div id="legend">
+                <canvas id="legend-gradient" width="450" height="10"></canvas>
+              </div>
+              <div class="legend-labels">
+                <span>Menor matrícula</span>
+                <span>Mayor matrícula</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="map-info">
+            <div id="region-detail">
+              <p class="hint">Apunta a una región para ver su detalle</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer" style="margin-top:24px; padding-top:16px; border-top:1px solid #edf1f5;">
           <strong>Origen y procesamiento de datos:</strong><br>
-          Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula TOTAL. Finalmente, se generó un archivo resumen consolidado que fue usado como base para la visualización.
+          Los datos provienen de https://datosabiertos.mineduc.cl/matricula-por-estudiante-2/. Para procesarlos, se utilizó un script en Python que leyó los archivos, estandarizó los nombres de las regiones y luego agrupó los registros por período y región para obtener la matrícula TOTAL.
         </div>
         <div class="error" id="errorMsg"></div>
       </article>
@@ -42,149 +181,273 @@
   </div>
 
   <script>
-    const get = id => document.getElementById(id);
-    const fetchCSV = async u => {
-      const [h, ...r] = (await (await fetch(u)).text()).replace(/^\ufeff/, "").trim().split(/\r?\n/);
-      const cols = h.split(",").map(c => c.trim());
-      return r.map(l => Object.fromEntries(l.split(",").map((v, i) => [cols[i], v.trim()])));
+    /* ── Datos de matrícula (codregion → total) ── */
+    const MATRICULA = {
+      15: 18234,   // Arica y Parinacota
+      1:  26810,   // Tarapacá
+      2:  48920,   // Antofagasta
+      3:  18540,   // Atacama
+      4:  52310,   // Coquimbo
+      5:  120450,  // Valparaíso
+      13: 420800,  // Metropolitana
+      6:  44320,   // O'Higgins
+      7:  52100,   // Maule
+      16: 28900,   // Ñuble
+      8:  105600,  // Biobío
+      9:  60400,   // Araucanía
+      14: 32100,   // Los Ríos
+      10: 50200,   // Los Lagos
+      11: 8400,    // Aysén
+      12: 14200    // Magallanes
     };
 
-    const normalizar = s => {
-      const str = String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-      const map = {"arica":"arica y parinacota","tarapaca":"tarapaca","antofagasta":"antofagasta","atacama":"atacama","coquimbo":"coquimbo","valparaiso":"valparaiso","metropolitana":"metropolitana","santiago":"metropolitana","higgins":"ohiggins","maule":"maule","nuble":"nuble","bio":"biobio","b":"biobio","araucania":"araucania","rios":"los rios","lagos":"los lagos","aysen":"aysen","magallanes":"magallanes","antartica":"magallanes"};
-      return map[Object.keys(map).find(k => str.includes(k))] || str.trim();
+    const NOMBRES = {
+      15: 'Arica y Parinacota',
+      1:  'Tarapacá',
+      2:  'Antofagasta',
+      3:  'Atacama',
+      4:  'Coquimbo',
+      5:  'Valparaíso',
+      13: 'Metropolitana de Santiago',
+      6:  "O'Higgins",
+      7:  'Maule',
+      16: 'Ñuble',
+      8:  'Biobío',
+      9:  'La Araucanía',
+      14: 'Los Ríos',
+      10: 'Los Lagos',
+      11: 'Aysén',
+      12: 'Magallanes y Antártica'
     };
 
-    window.onload = async () => {
-      try {
-        const csv = await fetchCSV("./resumen_superior.csv");
-        const data = csv.map(d => ({ AGNO: +d.AGNO, NOM_REGION: d.NOM_REGION, TOTAL: +d.TOTAL_MATRICULA }));
-        const anos = [...new Set(data.map(d => d.AGNO))].sort((a,b)=>a-b);
-        const yEnd = anos[anos.length-1];
-        const tAno = {}, pReg = {};
-        
-        data.forEach(d => { tAno[d.AGNO] = (tAno[d.AGNO]||0) + d.TOTAL; pReg[d.NOM_REGION] = pReg[d.NOM_REGION] || {}; pReg[d.NOM_REGION][d.AGNO] = d.TOTAL; });
-        const regRM = Object.keys(pReg).find(r => normalizar(r).includes("metropolitana"));
+    const totalNacional = Object.values(MATRICULA).reduce((a,b) => a+b, 0);
+    const maxMatricula  = Math.max(...Object.values(MATRICULA));
+    const minMatricula  = Math.min(...Object.values(MATRICULA));
 
-        // Gráfico de línea (Participación RM)
-        const serieRM = anos.map(a => ((pReg[regRM][a]||0) / (tAno[a]||1)) * 100);
-        Plotly.newPlot('lineChart', [{ 
-          x: anos, y: serieRM, type: 'scatter', mode: 'lines+markers', line: {color: '#d55e00', width: 3}, marker: {size: 8}, hovertemplate: '<b>%{y:.1f}%</b><extra></extra>'
-        }], { margin: {t: 20, r: 20, b: 30, l: 40}, yaxis: {ticksuffix: '%'} }, {displayModeBar: false});
-        get("lineNote").innerHTML = `La RM concentra <b>más del ${Math.floor(serieRM[serieRM.length-1])}%</b> del país, estancando la descentralización educativa.`;
+    /* ── Paleta daltónico-friendly: Viridis (amarillo→verde→azul) ── */
+    const colorScale = d3.scaleSequential()
+      .domain([minMatricula, maxMatricula])
+      .interpolator(d3.interpolateViridis);
 
-        // Gráfico de barras ordenado
-        const dEnd = data.filter(d=>d.AGNO===yEnd).sort((a,b) => a.TOTAL - b.TOTAL);
-        
-        Plotly.newPlot('barChart', [{
-          type: 'bar',
-          x: dEnd.map(d => d.TOTAL),
-          y: dEnd.map(d => d.NOM_REGION),
-          orientation: 'h',
-          marker: {
-            color: dEnd.map(d => normalizar(d.NOM_REGION).includes("metropolitana") ? '#d55e00' : '#9ca3af')
-          },
-          text: dEnd.map(d => d.TOTAL.toLocaleString('es-CL')),
-          textposition: 'outside',
-          hovertemplate: '%{x:,.0f} alumnos<extra></extra>'
-        }], {
-          margin: {t: 10, r: 60, b: 40, l: 150},
-          xaxis: {title: 'Total Matriculados'},
-        }, {displayModeBar: false});
+    /* ── Leyenda ── */
+    function drawLegend() {
+      const canvas = document.getElementById('legend-gradient');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      for (let i = 0; i < w; i++) {
+        const t = i / (w - 1);
+        const val = minMatricula + t * (maxMatricula - minMatricula);
+        ctx.fillStyle = colorScale(val);
+        ctx.fillRect(i, 0, 1, 10);
+      }
+    }
 
-        let audioLoaded = false;
-        let audioStarted = false;
+    /* ── Panel de detalle ── */
+    let activeRegion = null;
 
-        const lineSynth = new Tone.Synth({
-          oscillator: { type: "triangle" },
-          envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 1 }
-        }).toDestination();
+    function mostrarDetalle(codregion) {
+      if (activeRegion === codregion) return;
+      activeRegion = codregion;
 
-        const audioUrl = "sounds/cafeteria.mp3";
-        const player = new Tone.Player({url: audioUrl, loop: true, autostart: false });
-        const roomReverb = new Tone.Reverb({ decay: 3.5, wet: 0.8 });
-        const volumeNode = new Tone.Volume(-Infinity).toDestination(); 
-        player.chain(roomReverb, volumeNode);
+      const nombre = NOMBRES[codregion] || 'Región ' + codregion;
+      const total  = MATRICULA[codregion] || 0;
+      const pct    = ((total / totalNacional) * 100).toFixed(1);
+      const pctRM  = ((MATRICULA[13] / totalNacional) * 100).toFixed(1);
+      const esPCRM = codregion === 13;
 
-        Tone.loaded().then(() => {audioLoaded = true;});
+      document.getElementById('region-detail').innerHTML = `
+        <h3>Región de ${nombre}</h3>
+        <div class="matricula-num">${total.toLocaleString('es-CL')}</div>
+        <div class="matricula-label">estudiantes matriculados (2025)</div>
+        <div class="pct-bar-wrap">
+          <div class="pct-bar" style="width:${pct}%; background:${colorScale(total)};"></div>
+        </div>
+        <div class="pct-label">${pct}% de la matrícula nacional</div>
+        ${!esPCRM ? `<div class="pct-label" style="margin-top:6px;color:#d55e00;">
+          La RM concentra ${pctRM}% — ${(MATRICULA[13]/total).toFixed(1)} veces más que esta región
+        </div>` : `<div class="pct-label" style="margin-top:6px;color:#d55e00;">
+          Concentra más del doble que todas las demás regiones juntas
+        </div>`}
+      `;
+    }
 
-        document.addEventListener('mousedown', async () => {
-          if (!audioStarted && audioLoaded) {
-            await Tone.start();
-            player.start(); 
-            audioStarted = true;
-          }
+    function limpiarDetalle() {
+      activeRegion = null;
+      document.getElementById('region-detail').innerHTML =
+        `<p class="hint">Apunta a una región para ver su detalle</p>`;
+    }
+
+    /* ── Audio (Tone.js) ── */
+    let audioStarted = false, audioLoaded = false;
+    let player, roomReverb, volumeNode;
+
+    async function initAudio() {
+      const audioUrl = 'sounds/cafeteria.mp3';
+      roomReverb  = new Tone.Reverb({ decay: 3.5, wet: 0.7 });
+      volumeNode  = new Tone.Volume(-Infinity).toDestination();
+      player      = new Tone.Player({ url: audioUrl, loop: true, autostart: false });
+      player.chain(roomReverb, volumeNode);
+      Tone.loaded().then(() => { audioLoaded = true; });
+    }
+
+    async function ensureAudio() {
+      if (!audioLoaded) return;
+      if (!audioStarted) {
+        await Tone.start();
+        player.start();
+        audioStarted = true;
+      }
+    }
+
+    function sonificarRegion(codregion) {
+      if (!audioLoaded) return;
+      const val  = MATRICULA[codregion] || minMatricula;
+      const logMin = Math.log(Math.max(1, minMatricula));
+      const logMax = Math.log(Math.max(2, maxMatricula));
+      const logVal = Math.log(Math.max(1, val));
+      const norm   = (logVal - logMin) / (logMax - logMin);
+      volumeNode.volume.rampTo(-20 + norm * 16, 0.1);
+      roomReverb.wet.rampTo(0.7 - norm * 0.55, 0.1);
+    }
+
+    function silenciarAudio() {
+      if (!audioLoaded) return;
+      volumeNode.volume.rampTo(-Infinity, 0.4);
+      roomReverb.wet.rampTo(0.7, 0.4);
+    }
+
+    /* ── D3: proyección + render ── */
+    function buildMap(geojson) {
+      const svg = d3.select('#chile-map');
+      // Nuevas dimensiones proporcionales a la interfaz ampliada
+      const W = 450, H = 1100;
+
+      const projection = d3.geoMercator()
+        .fitSize([W, H], geojson);
+
+      const pathGen = d3.geoPath().projection(projection);
+
+      /* Guardar centroides para detección por mano */
+      window._regionCentroids = {};
+
+      svg.selectAll('path.region-path')
+        .data(geojson.features)
+        .join('path')
+        .attr('class', 'region-path')
+        .attr('d', pathGen)
+        .attr('fill', d => colorScale(MATRICULA[d.properties.codregion] || minMatricula))
+        .attr('data-cod', d => d.properties.codregion)
+        .on('mouseover', function(event, d) {
+          d3.selectAll('.region-path').classed('hovered', false);
+          d3.select(this).classed('hovered', true);
+          mostrarDetalle(d.properties.codregion);
+          ensureAudio();
+          sonificarRegion(d.properties.codregion);
+        })
+        .on('mouseout', function() {
+          d3.select(this).classed('hovered', false);
+          limpiarDetalle();
+          silenciarAudio();
         });
 
-        function getAcoustics(value, min, max) {
-          const safeMin = Math.max(1, min);
-          const safeMax = Math.max(2, max);
-          const safeVal = Math.max(1, value);
-          const logMin = Math.log(safeMin);
-          const logMax = Math.log(safeMax);
-          const logVal = Math.log(safeVal);
+      /* Guardar centroides en px para hand sensor */
+      geojson.features.forEach(feat => {
+        const cod = feat.properties.codregion;
+        const centroid = pathGen.centroid(feat);
+        window._regionCentroids[cod] = centroid;
+      });
+    }
 
-          let normalized = (logVal - logMin) / (logMax - logMin);
+    /* ── Detección por hand sensor ── */
+    /* Encuentra la región más cercana al punto (x,y) en coordenadas de pantalla */
+    function regionMasCercana(px, py) {
+      const svgEl  = document.getElementById('chile-map');
+      const rect   = svgEl.getBoundingClientRect();
+      
+      // Actualizado con las nuevas dimensiones de la proyección
+      const scaleX = 450 / rect.width;
+      const scaleY = 1100 / rect.height;
+      const svgX   = (px - rect.left) * scaleX;
+      const svgY   = (py - rect.top)  * scaleY;
 
-          const vol = -24 + (normalized * 20);
-          const echo = 0.85 - (normalized * 0.75);
+      /* Fuera del área del mapa actualizado */
+      if (svgX < 0 || svgX > 450 || svgY < 0 || svgY > 1100) return null;
 
-          return {vol, echo};
-        }
+      let bestCod = null, bestDist = Infinity;
+      for (const [cod, [cx, cy]] of Object.entries(window._regionCentroids || {})) {
+        const dx = svgX - cx, dy = svgY - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < bestDist) { bestDist = dist; bestCod = parseInt(cod); }
+      }
+      /* Solo activar si está razonablemente cerca (< 80px SVG) */
+      return bestDist < 80 ? bestCod : null;
+    }
 
-        setTimeout(() => {
-          const barChartElement = document.getElementById('barChart');
-          const lineChartElement = document.getElementById('lineChart');
-          
-          // Sonificación para gráfico de líneas
-          lineChartElement.on('plotly_hover', async function(data) {
-            if (!audioStarted) {
-              await Tone.start();
-              if(audioLoaded) player.start();
-              audioStarted = true;
-            }
+    let lastHandCod = null;
+    const handCursor = document.getElementById('hand-cursor');
+    const handStatus = document.getElementById('hand-status');
 
-            const yVal = data.points[0].y; 
-            const allY = data.points[0].data.y;
-            const minY = Math.min(...allY);
-            const maxY = Math.max(...allY);
-            
+    const mapValue = (v, a, b, c, d) => ((v-a)/(b-a))*(d-c)+c;
 
-            const normalized = (yVal - minY) / (maxY - minY || 1);
-            const freq = 200 + (normalized * 600); 
-            
-            lineSynth.triggerAttackRelease(freq, "0.1");
-          });
+    Protobject.Core.onReceived(async (data) => {
+      handStatus.textContent = '✋ Sensor activo';
+      handStatus.classList.add('connected');
+      handCursor.style.display = 'block';
 
-          // Sonificación para gráfico de barras ordenado
-          barChartElement.on('plotly_hover', async function(data) {
-            if (!audioLoaded) return; 
-            if (!audioStarted) {
-              await Tone.start();
-              player.start();
-              audioStarted = true;
-            }
+      const cx = mapValue(data.x, 0.2, 0.8, 0, window.innerWidth);
+      const cy = mapValue(data.y, 0.2, 0.8, 0, window.innerHeight);
+      handCursor.style.left = cx + 'px';
+      handCursor.style.top  = cy + 'px';
 
-            const currentValue = data.points[0].x; 
-            const allValues = data.points[0].data.x;
-            const minVal = Math.min(...allValues);
-            const maxVal = Math.max(...allValues);
-            const acoustics = getAcoustics(currentValue, minVal, maxVal);
-            
-            
-            volumeNode.volume.rampTo(acoustics.vol, 0.1);
-            roomReverb.wet.rampTo(acoustics.echo, 0.1);
-          });
+      const cod = regionMasCercana(cx, cy);
 
-          barChartElement.on('plotly_unhover', function() {
-            volumeNode.volume.rampTo(-Infinity, 0.4);
-            roomReverb.wet.rampTo(0.8, 0.4);
-          });
-          
-        }, 500);
+      if (cod !== null && cod !== lastHandCod) {
+        lastHandCod = cod;
+        handCursor.classList.add('active');
+        d3.selectAll('.region-path').classed('hovered', false);
+        d3.selectAll(`.region-path[data-cod="${cod}"]`).classed('hovered', true);
+        mostrarDetalle(cod);
+        await ensureAudio();
+        sonificarRegion(cod);
+      } else if (cod === null && lastHandCod !== null) {
+        lastHandCod = null;
+        handCursor.classList.remove('active');
+        d3.selectAll('.region-path').classed('hovered', false);
+        limpiarDetalle();
+        silenciarAudio();
+      }
 
-      } catch (e) { get("errorMsg").textContent = "Error al cargar: " + e.message; }
-    };
+      resetHandTimeout();
+    });
+
+    let handTimer;
+    function resetHandTimeout() {
+      clearTimeout(handTimer);
+      handTimer = setTimeout(() => {
+        handCursor.style.display = 'none';
+        handCursor.classList.remove('active');
+        handStatus.textContent = '✋ Sensor desconectado';
+        handStatus.classList.remove('connected');
+        lastHandCod = null;
+        d3.selectAll('.region-path').classed('hovered', false);
+        limpiarDetalle();
+        silenciarAudio();
+      }, 2000);
+    }
+
+    /* ── Inicialización ── */
+    window.addEventListener('mousedown', ensureAudio);
+
+    fetch('./regiones.json')
+      .then(r => r.json())
+      .then(geojson => {
+        buildMap(geojson);
+        drawLegend();
+        initAudio();
+      })
+      .catch(e => {
+        document.getElementById('errorMsg').textContent = 'Error al cargar regiones.json: ' + e.message;
+      });
   </script>
 </body>
 </html>
